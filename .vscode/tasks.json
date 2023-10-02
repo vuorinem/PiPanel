@@ -1,0 +1,52 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/PiPanel.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/PiPanel.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary",
+                "/property:PublishDir=${workspaceFolder}/Publish"
+            ],
+            "presentation": {
+                "panel": "new",
+                "close": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "deploy",
+            "dependsOn": [
+                "publish"
+            ],
+            "command": "scp",
+            "type": "process",
+            "args": [
+                "-r",
+                "./Publish/*",
+                "pi@raspberrypi:/home/pi/coding/PiPanel"
+            ],
+            "presentation": {
+                "panel": "new",
+                "close": true
+            },
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Remote Launch - Framework-dependent",
+            "preLaunchTask": "deploy",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "~/.dotnet/dotnet",
+            "args": [
+                "/home/pi/coding/PiPanel/PiPanel.dll"
+            ],
+            "cwd": "~/coding/PiPanel",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceRoot}",
+                "pipeProgram": "ssh",
+                "pipeArgs": [
+                    "pi@raspberrypi"
+                ],
+                "debuggerPath": "~/vsdbg/vsdbg"
+            }
+        }
+    ]
+}
