@@ -1,18 +1,47 @@
-﻿using System;
-using System.Device.Gpio;
+﻿using System.Text.Json;
+using Microsoft.Azure.Devices.Client;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+Console.WriteLine("Starting up PiPanel...");
 
-using var controller = new GpioController();
+using CancellationTokenSource cancellationTokenSource = new();
 
-controller.OpenPin(18, PinMode.Output);
+Console.WriteLine("> reading configuration");
 
-bool ledOn = true;
+var config = JsonSerializer.Deserialize<PiPanelConfig>(File.ReadAllBytes("config.json"));
 
-while (true)
+if (config is null)
 {
-    controller.Write(18, ledOn ? PinValue.High : PinValue.Low);
-    Thread.Sleep(1000);
-    ledOn = !ledOn;
+    Environment.Exit(1);
 }
+
+Console.WriteLine("> connecting to hub");
+using var deviceClient = DeviceClient.CreateFromConnectionString(config.DeviceConnectionString);
+
+var controller = new Controller(cancellationTokenSource.Token, deviceClient);
+
+Console.CancelKeyPress += (sender, eventArgs) =>
+{
+    eventArgs.Cancel = true;
+    cancellationTokenSource.Cancel();
+    Console.WriteLine("Shutdown requested");
+};
+
+Console.WriteLine("Start up complete");
+
+try
+{
+    await controller.RunAsync();
+}
+catch
+{
+    Console.WriteLine();
+
+    Environment.Exit(1);
+}
+
+Console.WriteLine("Shutting down PiPanel...");
+
+Console.WriteLine("> closing hub connection");
+await deviceClient.CloseAsync();
+
+Console.WriteLine("Shutdown complete");
