@@ -20,12 +20,12 @@ public static class CameraCapture
 
     private static readonly SemaphoreSlim captureLock = new(1, 1);
 
-    public static async Task CaptureImage(CameraInfo camera, string filePath)
+    public static async Task CaptureImageAsync(CameraInfo camera, string filePath)
     {
-        await RunCaptureProcess(camera, filePath);
+        await RunCaptureProcessAsync(camera, filePath);
     }
 
-    private static async Task RunCaptureProcess(CameraInfo camera, string filePath)
+    private static async Task RunCaptureProcessAsync(CameraInfo camera, string filePath)
     {
         await captureLock.WaitAsync();
 
