@@ -1,5 +1,9 @@
 using System.Text.Json;
+using Azure;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Transport;
 
 public class Controller
 {
@@ -57,16 +61,37 @@ public class Controller
             try
             {
                 await CameraCapture.CaptureImageAsync(camera, CameraImageTmpFilePath);
+                await UploadCaptureImage(camera.Label);
             }
             catch (CameraException ex)
             {
                 Console.WriteLine($"Exception during image capture: {ex.Message}");
                 continue;
             }
-
-            var timestamp = DateTime.Now.ToShortTimeString();
-            File.Copy(CameraImageTmpFilePath, $"tmp/Captures/{camera.Label}_{timestamp}.jpg", true);
+            catch (RequestFailedException ex)
+            {
+                Console.WriteLine($"Exception during image upload: {ex.Message}");
+                continue;
+            }
         }
+    }
+
+    private async Task UploadCaptureImage(string label)
+    {
+        var fileTime = File.GetCreationTimeUtc(CameraImageTmpFilePath);
+        var datePath = fileTime.ToString("yyyy/MM/dd/HH/mm/ss");
+
+        var sasUri = await deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
+        {
+            BlobName = $"{datePath}/{label}.jpg",
+        });
+
+        var uploadUri = sasUri.GetBlobUri();
+        var blobClient = new BlockBlobClient(uploadUri);
+
+        using var fileStream = File.OpenRead(CameraImageTmpFilePath);
+
+        await blobClient.UploadAsync(fileStream, new BlobUploadOptions());
     }
 
     private async Task<MethodResponse> OnSetCameraIntervalAsync(MethodRequest methodRequest, object userContext)
