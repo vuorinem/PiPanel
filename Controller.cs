@@ -5,27 +5,28 @@ public class Controller
 {
     private readonly DeviceClient deviceClient;
 
-    private CancellationToken shutdownToken;
-
     private CancellationTokenSource? sleepTokenSource;
+
+    private bool isRunning = false;
 
     private TimeSpan cameraInterval = TimeSpan.FromSeconds(600);
 
     private const string CameraImageTmpFilePath = "tmp/cameraimage.jpg";
 
-    public Controller(CancellationToken shutdownToken, DeviceClient deviceClient)
+    public Controller(DeviceClient deviceClient)
     {
-        this.shutdownToken = shutdownToken;
         this.deviceClient = deviceClient;
     }
 
     public async Task RunAsync()
     {
+        isRunning = true;
+
         deviceClient.SetConnectionStatusChangesHandler(OnConnectionStatusChanges);
         await deviceClient.SetReceiveMessageHandlerAsync(OnReceiveMessage, null);
         await deviceClient.SetMethodHandlerAsync(MethodNames.SetCameraInterval, OnSetCameraIntervalAsync, null);
 
-        while (!shutdownToken.IsCancellationRequested)
+        while (isRunning)
         {
             await CaptureCameraImagesAsync();
 
@@ -41,6 +42,12 @@ public class Controller
                 continue;
             }
         }
+    }
+
+    public void Stop()
+    {
+        isRunning = false;
+        sleepTokenSource?.Cancel();
     }
 
     private async Task CaptureCameraImagesAsync()

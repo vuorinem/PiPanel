@@ -17,12 +17,12 @@ if (config is null)
 Console.WriteLine("> connecting to hub");
 using var deviceClient = DeviceClient.CreateFromConnectionString(config.DeviceConnectionString);
 
-var controller = new Controller(cancellationTokenSource.Token, deviceClient);
+var controller = new Controller(deviceClient);
 
 Console.CancelKeyPress += (sender, eventArgs) =>
 {
     eventArgs.Cancel = true;
-    cancellationTokenSource.Cancel();
+    controller.Stop();
     Console.WriteLine("Shutdown requested");
 };
 
