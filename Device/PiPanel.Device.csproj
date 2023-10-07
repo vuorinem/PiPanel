@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Publish\**" />
+    <EmbeddedResource Remove="Publish\**" />
+    <None Remove="Publish\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.18.0" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.0" />
     <PackageReference Include="System.Device.Gpio" Version="3.0.0" />
