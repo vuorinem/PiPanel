@@ -43,7 +43,7 @@
     {
         await RefreshImages();
 
-        if (images is not null)
+        if (images is not null && images.Any())
         {
             await SelectImage(images.Last());
         }
@@ -51,7 +51,7 @@
 
     protected async Task RefreshImages()
     {
-        images = await Http.GetFromJsonAsync<List<CapturedImage>>($"CameraCapture?cameraLabel={Camera.Label}&date={selectedDate.ToShortDateString()}");
+        images = await Http.GetFromJsonAsync<List<CapturedImage>>($"CameraCapture?cameraLabel={Camera.Label}&date={selectedDate.ToString(CapturedImageNaming.DatePathFormat)}");
     }
 
     protected async Task ChangeDate(int daysChanged)
