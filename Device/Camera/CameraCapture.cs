@@ -1,6 +1,8 @@
 using PiPanel.Shared.Camera;
 using System.Diagnostics;
 
+namespace PiPanel.Device.Camera;
+
 public static class CameraCapture
 {
     private static readonly SemaphoreSlim captureLock = new(1, 1);

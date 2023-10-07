@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net6.0/PiPanel.dll",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/PiPanel.Device.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
@@ -22,7 +22,7 @@
             "request": "launch",
             "program": "~/.dotnet/dotnet",
             "args": [
-                "/home/pi/coding/PiPanel/PiPanel.dll"
+                "/home/pi/coding/PiPanel/PiPanel.Device.dll"
             ],
             "cwd": "~/coding/PiPanel",
             "stopAtEntry": false,

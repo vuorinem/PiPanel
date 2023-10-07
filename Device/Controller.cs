@@ -4,7 +4,10 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Transport;
+using PiPanel.Device.Camera;
 using PiPanel.Shared.Camera;
+
+namespace PiPanel.Device;
 
 public class Controller
 {

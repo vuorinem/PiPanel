@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Azure.Devices.Client;
+using PiPanel.Device;
 
 Console.WriteLine("Starting up PiPanel...");
 

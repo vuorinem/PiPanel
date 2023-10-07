@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PiPanel.Client", "Client\Pi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PiPanel.Shared", "Shared\PiPanel.Shared.csproj", "{59CC6EF8-8447-429F-9F58-A5C378969994}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PiPanel", "Device\PiPanel.csproj", "{F46A3857-B04D-43FB-A3F9-D266DA5C068B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PiPanel.Device", "Device\PiPanel.Device.csproj", "{F46A3857-B04D-43FB-A3F9-D266DA5C068B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

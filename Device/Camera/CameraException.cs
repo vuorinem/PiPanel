@@ -1,3 +1,5 @@
+namespace PiPanel.Device.Camera;
+
 public class CameraException : Exception
 {
     public CameraException(string? message) : base(message) { }
