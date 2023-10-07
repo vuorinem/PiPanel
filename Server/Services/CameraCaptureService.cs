@@ -2,7 +2,6 @@
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 using PiPanel.Server.Options;
-using PiPanel.Shared;
 using PiPanel.Shared.Camera;
 
 namespace PiPanel.Server.Services;
@@ -25,15 +24,14 @@ public class CameraCaptureService
 
     public async Task<IEnumerable<CapturedImage>> GetCameraCaptures(DateOnly date, string label)
     {
-        var datePath = date.ToString("yyyy-MM-dd");
-        var blobPrefix = $"{PiPanelStatus.DeviceName}/{datePath}/{label}/";
+        var blobPrefix = CapturedImageNaming.GetBlobPrefixForDate(label, date);
         var blobList = containerClient.GetBlobsAsync(prefix: blobPrefix);
 
         var images = new List<CapturedImage>();
 
         await foreach (var blob in blobList)
         {
-            var timeCreated = TimeOnly.ParseExact(blob.Name.Substring(blobPrefix.Length, 8), "HH-mm-ss");
+            var timeCreated = TimeOnly.ParseExact(blob.Name.Substring(blobPrefix.Length, CapturedImageNaming.TimePathFormat.Length), CapturedImageNaming.TimePathFormat);
 
             images.Add(new CapturedImage
             {

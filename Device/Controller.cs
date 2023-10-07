@@ -82,10 +82,8 @@ public class Controller
 
     private async Task UploadCaptureImage(string label)
     {
-        var fileTime = File.GetCreationTimeUtc(CameraImageTmpFilePath);
-        var datePath = fileTime.ToString("yyyy-MM-dd");
-        var timePath = fileTime.ToString("HH-mm-ss");
-        var blobName = $"{datePath}/{label}/{timePath}.jpg";
+        var fileTime = File.GetCreationTime(CameraImageTmpFilePath);
+        var blobName = CapturedImageNaming.GetBlobNameForDevice(label, fileTime);
 
         Console.WriteLine($"Uploading capture image {blobName}");
 
