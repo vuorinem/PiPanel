@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\js\setImage.js" />
+		<None Include="wwwroot\js\setImage.js" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -18,11 +18,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Shared\PiPanel.Shared.csproj" />
+		<TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
+		<ProjectReference Include="..\Shared\PiPanel.Shared.csproj" />
 	</ItemGroup>
 
 </Project>

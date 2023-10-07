@@ -3,19 +3,11 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
-<PageTitle>Camera Captures</PageTitle>
-
-
 <h2>@Camera.Label</h2>
 
 <p>
-    <b>Day:</b> @selectedDate.ToShortDateString()
-    @if (selectedImage is not null)
-    {
-        <br />
-
-        <b>Time:</b> @selectedImage.CreatedAt.ToShortTimeString()
-    }
+    <b>Day:</b> @selectedDate.ToShortDateString()<br />
+    <b>Time:</b> @selectedImage?.CreatedAt.ToShortTimeString()
 </p>
 
 <div class="justify-content-center">
@@ -25,28 +17,14 @@
     <button @onclick="() => ChangeDate(1)">Next day <span class="oi oi-caret-right"></span></button>
 </div>
 
-@if (images == null)
-{
-    <p><em>Loading...</em></p>
-}
-else if (selectedImage == null)
-{
-    <ul>
-        @foreach (var image in images)
-        {
-            <li>
-                <button @onclick="() => SelectImage(image)">@image.CreatedAt.ToShortTimeString()</button>
-            </li>
-        }
-    </ul>
-}
-else
-{
-    @if (selectedImage is not null)
+<p>
+    @if (images is null)
     {
-        <img class="img-fluid" @ref="imageElement" alt="Image captured from @Camera.Label" />
+        <em>Loading...</em>
     }
-}
+
+    <img class="img-fluid @(selectedImage is null ? "invisible" : "visible")" @ref="imageElement" alt="Image captured from @Camera.Label" />
+</p>
 
 
 @code {
@@ -85,9 +63,9 @@ else
 
         await RefreshImages();
 
-        if (images is not null)
+        if (images is not null && images.Any())
         {
-            await SelectImage(images.Last());
+            await SelectImage(daysChanged > 0 ? images.First() : images.Last());
         }
     }
 
@@ -103,7 +81,7 @@ else
 
     protected async Task SelectPreviousImage()
     {
-        if (images is null)
+        if (images is null || !images.Any())
         {
             return;
         }
@@ -119,12 +97,16 @@ else
             {
                 await SelectImage(images[imageIndex - 1]);
             }
+            else
+            {
+                await ChangeDate(-1);
+            }
         }
     }
 
     protected async Task SelectNextImage()
     {
-        if (images is null)
+        if (images is null || !images.Any())
         {
             return;
         }
