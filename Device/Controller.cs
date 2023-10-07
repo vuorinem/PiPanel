@@ -79,11 +79,14 @@ public class Controller
     private async Task UploadCaptureImage(string label)
     {
         var fileTime = File.GetCreationTimeUtc(CameraImageTmpFilePath);
-        var datePath = fileTime.ToString("yyyy/MM/dd/HH/mm/ss");
+        var dateTimePath = fileTime.ToString("yyyy-MM-dd-HH-mm-ss");
+        var blobName = $"{label}/{dateTimePath}.jpg";
+
+        Console.WriteLine($"Uploading capture image {blobName}");
 
         var sasUri = await deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
         {
-            BlobName = $"{datePath}/{label}.jpg",
+            BlobName = blobName,
         });
 
         var uploadUri = sasUri.GetBlobUri();
