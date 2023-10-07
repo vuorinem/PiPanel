@@ -4,6 +4,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Transport;
+using PiPanel.Shared.Camera;
 
 public class Controller
 {
@@ -56,7 +57,7 @@ public class Controller
 
     private async Task CaptureCameraImagesAsync()
     {
-        foreach (var camera in CameraCapture.Cameras)
+        foreach (var camera in CameraList.Cameras)
         {
             try
             {
@@ -79,8 +80,9 @@ public class Controller
     private async Task UploadCaptureImage(string label)
     {
         var fileTime = File.GetCreationTimeUtc(CameraImageTmpFilePath);
-        var dateTimePath = fileTime.ToString("yyyy-MM-dd-HH-mm-ss");
-        var blobName = $"{label}/{dateTimePath}.jpg";
+        var datePath = fileTime.ToString("yyyy-MM-dd");
+        var timePath = fileTime.ToString("HH-mm-ss");
+        var blobName = $"{datePath}/{label}/{timePath}.jpg";
 
         Console.WriteLine($"Uploading capture image {blobName}");
 

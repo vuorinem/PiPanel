@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
+using PiPanel.Server.Services;
 using PiPanel.Shared;
+using PiPanel.Shared.Camera;
 
 namespace PiPanel.Server.Controllers;
 
@@ -11,22 +13,33 @@ namespace PiPanel.Server.Controllers;
 [RequiredScope("API.Access")]
 public class CameraCaptureController : ControllerBase
 {
-    private readonly ILogger<CameraCaptureController> _logger;
+    private readonly CameraCaptureService cameraCaptureService;
+    private readonly ILogger<CameraCaptureController> logger;
 
-    public CameraCaptureController(ILogger<CameraCaptureController> logger)
+    public CameraCaptureController(
+        CameraCaptureService cameraCaptureService,
+        ILogger<CameraCaptureController> logger)
     {
-        _logger = logger;
+        this.cameraCaptureService = cameraCaptureService;
+        this.logger = logger;
     }
 
     [HttpGet]
-    public IEnumerable<WeatherForecast> Get()
+    public async Task<IEnumerable<CapturedImage>> GetAsync(string date, string cameraLabel)
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        return await cameraCaptureService.GetCameraCaptures(DateOnly.Parse(date), cameraLabel);
+    }
+
+    [HttpGet("Image")]
+    public async Task<ActionResult> GetImageAsync(string blob, CancellationToken cancellationToken)
+    {
+        var imageContent = await cameraCaptureService.GetCapturedImage(blob, cancellationToken);
+
+        if (imageContent is null)
         {
-            Date = DateTime.Now.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+            return NotFound();
+        }
+
+        return new FileContentResult(imageContent, "image/jpeg");
     }
 }

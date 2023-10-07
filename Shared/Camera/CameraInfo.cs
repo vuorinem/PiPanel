@@ -1,3 +1,5 @@
+namespace PiPanel.Shared.Camera;
+
 public class CameraInfo
 {
     public string Label { get; set; } = default!;

@@ -1,20 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.21" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.21" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.21" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+	  <None Include="wwwroot\js\setImage.js" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Shared\PiPanel.Shared.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.22" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.22" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.22" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Shared\PiPanel.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
+	</ItemGroup>
 
 </Project>

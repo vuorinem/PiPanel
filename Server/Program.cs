@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Identity.Web;
+using PiPanel.Server.Options;
+using PiPanel.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+builder.Services.Configure<IotOptions>(builder.Configuration.GetSection("Iot"));
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
+
+builder.Services.AddSingleton<IotHubService>();
+builder.Services.AddSingleton<CameraCaptureService>();
 
 var app = builder.Build();
 

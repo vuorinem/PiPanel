@@ -1,23 +1,8 @@
+using PiPanel.Shared.Camera;
 using System.Diagnostics;
 
 public static class CameraCapture
 {
-    public static readonly ICollection<CameraInfo> Cameras = new CameraInfo[]
-    {
-        new() {
-            Label = "PiCam",
-            Source = "/dev/video0",
-            ResolutionWidth = 1920,
-            ResolutionHeight = 1080,
-        },
-        new() {
-            Label = "WebCam",
-            Source = "/dev/video1",
-            ResolutionWidth = 1920,
-            ResolutionHeight = 1080,
-        },
-    };
-
     private static readonly SemaphoreSlim captureLock = new(1, 1);
 
     public static async Task CaptureImageAsync(CameraInfo camera, string filePath)

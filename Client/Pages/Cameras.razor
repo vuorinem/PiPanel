@@ -1,0 +1,23 @@
+﻿@page "/cameras"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using PiPanel.Client.Components
+@using PiPanel.Shared
+@using PiPanel.Shared.Camera;
+@attribute [Authorize]
+@inject HttpClient Http
+
+<PageTitle>Camera Captures</PageTitle>
+
+<h1>Camera Captures</h1>
+
+<div class="container">
+    <div class="row">
+        @foreach (var camera in CameraList.Cameras)
+        {
+            <div class="col">
+                <CameraCaptures Camera="camera"></CameraCaptures>
+            </div>
+        }
+    </div>
+</div>
