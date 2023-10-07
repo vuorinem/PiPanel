@@ -94,7 +94,26 @@ public class Controller
 
         using var fileStream = File.OpenRead(CameraImageTmpFilePath);
 
-        await blobClient.UploadAsync(fileStream, new BlobUploadOptions());
+        try
+        {
+            await blobClient.UploadAsync(fileStream, new BlobUploadOptions());
+        }
+        catch
+        {
+            await deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
+            {
+                CorrelationId = sasUri.CorrelationId,
+                IsSuccess = false,
+            });
+
+            return;
+        }
+
+        await deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
+        {
+            CorrelationId = sasUri.CorrelationId,
+            IsSuccess = true,
+        });
     }
 
     private async Task<MethodResponse> OnSetCameraIntervalAsync(MethodRequest methodRequest, object userContext)

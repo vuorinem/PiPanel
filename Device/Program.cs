@@ -32,9 +32,10 @@ try
 {
     await controller.RunAsync();
 }
-catch
+catch(Exception ex)
 {
-    Console.WriteLine();
+    Console.WriteLine($"Unexpected exception: {ex.Message}");
+    Console.Error.WriteLine(ex);
 
     Environment.Exit(1);
 }
