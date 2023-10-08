@@ -1,0 +1,14 @@
+﻿@page "/configuration"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using PiPanel.Client.Components
+@using PiPanel.Shared
+@using PiPanel.Shared.Camera;
+@attribute [Authorize]
+@inject HttpClient Http
+
+<PageTitle>Configuration</PageTitle>
+
+<div class="container">
+    <h1>Configuration</h1>
+</div>

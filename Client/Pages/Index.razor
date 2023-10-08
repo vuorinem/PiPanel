@@ -1,7 +1,30 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using PiPanel.Shared;
+@attribute [Authorize]
+@inject HttpClient Http
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>PiPanel Details</h1>
 
-Welcome to your new app.
+<table class="table table-responsive">
+    <tr>
+        <th>Connection Status</th>
+        <td>@(status is null ? "" : status.IsConnected ? "Connected" : "Disconnected")</td>
+    </tr>
+    <tr>
+        <th>Last Activity</th>
+        <td>@status?.LastActivityTime</td>
+    </tr>
+</table>
+
+@code {
+    private PiPanelStatus? status;
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = await Http.GetFromJsonAsync<PiPanelStatus>("Device");
+    }
+}
