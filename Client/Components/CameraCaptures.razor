@@ -81,9 +81,13 @@
 
     protected async Task SelectPreviousImage()
     {
-        if (images is null || !images.Any())
+        if (images is null)
         {
             return;
+        }
+        else if (!images.Any())
+        {
+            await ChangeDate(-1);
         }
         else if (selectedImage is null)
         {
@@ -106,9 +110,13 @@
 
     protected async Task SelectNextImage()
     {
-        if (images is null || !images.Any())
+        if (images is null)
         {
             return;
+        }
+        else if (!images.Any())
+        {
+            await ChangeDate(1);
         }
         else if (selectedImage is null)
         {
