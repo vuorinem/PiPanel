@@ -6,7 +6,7 @@
 <h2>@Camera.Label</h2>
 
 <p>
-    <b>Day:</b> @selectedDate.ToShortDateString()<br />
+    <b>Day:</b> @selectedDate.ToShortDateString() (@(images?.Count ?? 0) images)<br />
     <b>Time:</b> @selectedImage?.CreatedAt.ToShortTimeString()
 </p>
 
@@ -121,6 +121,10 @@
             if (imageIndex < images.Count - 1)
             {
                 await SelectImage(images[imageIndex + 1]);
+            }
+            else
+            {
+                await ChangeDate(1);
             }
         }
     }
