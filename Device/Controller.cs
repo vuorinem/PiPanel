@@ -1,11 +1,6 @@
 using System.Text.Json;
-using Azure;
-using Azure.Storage.Blobs.Models;
-using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Client.Transport;
 using PiPanel.Device.Camera;
-using PiPanel.Shared.Camera;
 
 namespace PiPanel.Device;
 
@@ -13,13 +8,15 @@ public class Controller
 {
     private readonly DeviceClient deviceClient;
 
-    private CancellationTokenSource? sleepTokenSource;
-
     private bool isRunning = false;
+
+    private TimeSpan controllerSleepInterval = TimeSpan.FromSeconds(60);
+
+    private CancellationTokenSource? controllerSleepTokenSource;
 
     private TimeSpan cameraInterval = TimeSpan.FromSeconds(600);
 
-    private const string CameraImageTmpFilePath = "tmp/cameraimage.jpg";
+    private Timer? cameraTimer;
 
     public Controller(DeviceClient deviceClient)
     {
@@ -34,89 +31,36 @@ public class Controller
         await deviceClient.SetReceiveMessageHandlerAsync(OnReceiveMessage, null);
         await deviceClient.SetMethodHandlerAsync(MethodNames.SetCameraInterval, OnSetCameraIntervalAsync, null);
 
+        var cameraService = new CameraService(deviceClient);
+        cameraTimer = new Timer(cameraService.ExecuteAsync, null, TimeSpan.Zero, cameraInterval);
+
+        Console.WriteLine("Starting controller");
+
         while (isRunning)
         {
-            await CaptureCameraImagesAsync();
-
             try
             {
-                using (sleepTokenSource = new CancellationTokenSource())
+                using (controllerSleepTokenSource = new CancellationTokenSource())
                 {
-                    await Task.Delay(cameraInterval, sleepTokenSource.Token);
+                    Console.WriteLine($"Controller is running, sleeping for {controllerSleepInterval}");
+                    await Task.Delay(controllerSleepInterval, controllerSleepTokenSource.Token);
                 }
             }
             catch (TaskCanceledException)
             {
-                continue;
+                break;
             }
         }
+
+        await cameraTimer.DisposeAsync();
+
+        Console.WriteLine("Stopping controller");
     }
 
     public void Stop()
     {
         isRunning = false;
-        sleepTokenSource?.Cancel();
-    }
-
-    private async Task CaptureCameraImagesAsync()
-    {
-        foreach (var camera in CameraList.Cameras)
-        {
-            try
-            {
-                await CameraCapture.CaptureImageAsync(camera, CameraImageTmpFilePath);
-                await UploadCaptureImage(camera.Label);
-            }
-            catch (CameraException ex)
-            {
-                Console.WriteLine($"Exception during image capture: {ex.Message}");
-                continue;
-            }
-            catch (RequestFailedException ex)
-            {
-                Console.WriteLine($"Exception during image upload: {ex.Message}");
-                continue;
-            }
-        }
-    }
-
-    private async Task UploadCaptureImage(string label)
-    {
-        var fileTime = File.GetCreationTime(CameraImageTmpFilePath);
-        var blobName = CapturedImageNaming.GetBlobNameForDevice(label, fileTime);
-
-        Console.WriteLine($"Uploading capture image {blobName}");
-
-        var sasUri = await deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
-        {
-            BlobName = blobName,
-        });
-
-        var uploadUri = sasUri.GetBlobUri();
-        var blobClient = new BlockBlobClient(uploadUri);
-
-        using var fileStream = File.OpenRead(CameraImageTmpFilePath);
-
-        try
-        {
-            await blobClient.UploadAsync(fileStream, new BlobUploadOptions());
-        }
-        catch
-        {
-            await deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
-            {
-                CorrelationId = sasUri.CorrelationId,
-                IsSuccess = false,
-            });
-
-            return;
-        }
-
-        await deviceClient.CompleteFileUploadAsync(new FileUploadCompletionNotification
-        {
-            CorrelationId = sasUri.CorrelationId,
-            IsSuccess = true,
-        });
+        controllerSleepTokenSource?.Cancel();
     }
 
     private async Task<MethodResponse> OnSetCameraIntervalAsync(MethodRequest methodRequest, object userContext)
@@ -130,8 +74,7 @@ public class Controller
             Console.WriteLine($"Hub set camera interval to {intervalInSeconds} seconds");
 
             cameraInterval = TimeSpan.FromSeconds(intervalInSeconds);
-
-            sleepTokenSource?.Cancel();
+            cameraTimer?.Change(TimeSpan.Zero, cameraInterval);
 
             return new MethodResponse(0);
         }
