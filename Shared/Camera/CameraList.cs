@@ -7,14 +7,14 @@ public static class CameraList
         new() {
             Label = "PiCam",
             Source = "/dev/video0",
-            ResolutionWidth = 1920,
-            ResolutionHeight = 1080,
+            ResolutionWidth = 640,
+            ResolutionHeight = 480,
         },
         new() {
             Label = "WebCam",
             Source = "/dev/video1",
-            ResolutionWidth = 1920,
-            ResolutionHeight = 1080,
+            ResolutionWidth = 640,
+            ResolutionHeight = 480,
         },
     };
 }
