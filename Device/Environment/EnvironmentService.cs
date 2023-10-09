@@ -69,6 +69,7 @@ public class EnvironmentService
 
             environmentStatus = new EnvironmentStatus
             {
+                MeasuredAt = DateTime.Now,
                 Temperature = temperature,
                 Humidity = humidity,
             };

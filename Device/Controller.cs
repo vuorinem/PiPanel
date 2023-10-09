@@ -11,15 +11,15 @@ public class Controller
 
     private bool isRunning = false;
 
-    private TimeSpan controllerSleepInterval = TimeSpan.FromSeconds(60);
+    private TimeSpan controllerSleepInterval = TimeSpan.FromMinutes(1);
 
     private CancellationTokenSource? controllerSleepTokenSource;
 
-    private TimeSpan cameraInterval = TimeSpan.FromSeconds(600);
+    private TimeSpan cameraInterval = TimeSpan.FromMinutes(30);
 
     private Timer? cameraTimer;
 
-    private TimeSpan environmentInterval = TimeSpan.FromSeconds(10);
+    private TimeSpan environmentInterval = TimeSpan.FromMinutes(5);
 
     private Timer? environmentTimer;
 
