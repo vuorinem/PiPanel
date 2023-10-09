@@ -50,7 +50,7 @@ public class CameraService
         var fileTime = File.GetCreationTime(CameraImageTmpFilePath);
         var blobName = CapturedImageNaming.GetBlobNameForDevice(label, fileTime);
 
-        Console.WriteLine($"Uploading capture image {blobName}");
+        Console.WriteLine("Uploading capture image: {0}", blobName);
 
         var sasUri = await deviceClient.GetFileUploadSasUriAsync(new FileUploadSasUriRequest
         {
@@ -82,5 +82,7 @@ public class CameraService
             CorrelationId = sasUri.CorrelationId,
             IsSuccess = true,
         });
+
+        Console.WriteLine("Capture image successfully uploaded: {0}", blobName);
     }
 }

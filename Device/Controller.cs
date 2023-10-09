@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Azure.Devices.Client;
 using PiPanel.Device.Camera;
+using PiPanel.Device.Environment;
 
 namespace PiPanel.Device;
 
@@ -18,6 +19,10 @@ public class Controller
 
     private Timer? cameraTimer;
 
+    private TimeSpan environmentInterval = TimeSpan.FromSeconds(10);
+
+    private Timer? environmentTimer;
+
     public Controller(DeviceClient deviceClient)
     {
         this.deviceClient = deviceClient;
@@ -33,6 +38,9 @@ public class Controller
 
         var cameraService = new CameraService(deviceClient);
         cameraTimer = new Timer(cameraService.ExecuteAsync, null, TimeSpan.Zero, cameraInterval);
+
+        var environmentService = new EnvironmentService(deviceClient);
+        environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, environmentInterval);
 
         Console.WriteLine("Starting controller");
 
@@ -50,11 +58,18 @@ public class Controller
             {
                 break;
             }
+            finally
+            {
+                controllerSleepTokenSource = null;
+            }
         }
 
-        await cameraTimer.DisposeAsync();
+        Console.WriteLine("Stopping controller timers");
 
-        Console.WriteLine("Stopping controller");
+        await cameraTimer.DisposeAsync();
+        await environmentTimer.DisposeAsync();
+
+        Console.WriteLine("Controller stopped");
     }
 
     public void Stop()
