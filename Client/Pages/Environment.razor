@@ -1,0 +1,97 @@
+﻿@page "/environment"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using PiPanel.Shared
+@using PiPanel.Shared.Environment;
+@attribute [Authorize]
+@inject HttpClient Http
+
+<PageTitle>Environment</PageTitle>
+
+<div class="container">
+    <h1>Environment</h1>
+
+    <p>
+        <b>Day:</b> @selectedDate.ToShortDateString()<br />
+    </p>
+
+    <p class="justify-content-center">
+        <button @onclick="() => ChangeDate(-1)"><span class="oi oi-caret-left"></span> Previous day</button>
+        <button @onclick="() => ChangeDate(1)">Next day <span class="oi oi-caret-right"></span></button>
+    </p>
+
+    @if (isLoading)
+    {
+        <p>
+            Loading...
+        </p>
+    }
+    else if (environmentStatus is not null)
+    {
+        <p>
+            <b>Measured At:</b> <span>@environmentStatus.MeasuredAt.ToShortTimeString()</span>
+            <br />
+            <b>Temperature:</b> <span>@environmentStatus?.Temperature °C</span>
+            <br />
+            <b>Humidity:</b> <span>@environmentStatus?.Humidity %</span>
+        </p>
+    }
+    else
+    {
+        <p>
+            No data available
+        </p>
+    }
+</div>
+
+@code {
+    private DateOnly selectedDate = DateOnly.FromDateTime(DateTime.Today);
+    private EnvironmentStatus? environmentStatus;
+
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStatus();
+    }
+
+    protected async Task RefreshStatus()
+    {
+        environmentStatus = await GetEnvironmentStatusAsync(selectedDate);
+    }
+
+    protected async Task ChangeDate(int daysChanged)
+    {
+        environmentStatus = null;
+
+        selectedDate = selectedDate.AddDays(daysChanged);
+
+        await RefreshStatus();
+    }
+
+    private async Task<EnvironmentStatus?> GetEnvironmentStatusAsync(DateOnly date)
+    {
+        isLoading = true;
+
+        try
+        {
+            var response = await Http.GetAsync($"Environment?date={selectedDate.ToString(EnvironmentStatusNaming.DatePathFormat)}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<EnvironmentStatus>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

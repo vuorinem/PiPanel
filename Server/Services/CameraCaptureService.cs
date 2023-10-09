@@ -19,7 +19,7 @@ public class CameraCaptureService
         this.logger = logger;
 
         options = optionsSnapshot.Value;
-        containerClient = new BlobContainerClient(options.ContainerUri, new DefaultAzureCredential());
+        containerClient = new BlobContainerClient(options.CaptureContainerUri, new DefaultAzureCredential());
     }
 
     public async Task<IEnumerable<CapturedImage>> GetCameraCaptures(DateOnly date, string label)

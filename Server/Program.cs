@@ -19,6 +19,7 @@ builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Sto
 
 builder.Services.AddSingleton<IotHubService>();
 builder.Services.AddSingleton<CameraCaptureService>();
+builder.Services.AddSingleton<EnvironmentService>();
 
 var app = builder.Build();
 

@@ -7,18 +7,14 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>PiPanel Details</h1>
+<div class="container">
+    <h1>PiPanel Details</h1>
 
-<table class="table table-responsive">
-    <tr>
-        <th>Connection Status</th>
-        <td>@(status is null ? "" : status.IsConnected ? "Connected" : "Disconnected")</td>
-    </tr>
-    <tr>
-        <th>Last Activity</th>
-        <td>@status?.LastActivityTime</td>
-    </tr>
-</table>
+    <p>
+        <b>Connection Status: </b> @(status is null ? "" : status.IsConnected ? "Connected" : "Disconnected")
+        <br /><b>Last Activity:</b> @status?.LastActivityTime
+    </p>
+</div>
 
 @code {
     private PiPanelStatus? status;

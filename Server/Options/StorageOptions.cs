@@ -2,5 +2,6 @@
 
 public class StorageOptions
 {
-    public Uri ContainerUri { get; set; } = default!;
+    public Uri CaptureContainerUri { get; set; } = default!;
+    public Uri EnvironmentContainerUri { get; set; } = default!;
 }
