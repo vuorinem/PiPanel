@@ -28,4 +28,18 @@ public class DeviceController : ControllerBase
     {
         return await iotHubService.GetDevice();
     }
+
+    [HttpGet("Properties")]
+    public async Task<DeviceProperties> GetDevicePropertiesAsync()
+    {
+        return await iotHubService.GetDeviceProperties();
+    }
+
+    [HttpPost("Interval")]
+    public async Task<ActionResult> SetDeviceProperty(DeviceIntervalUpdateRequest request)
+    {
+        await iotHubService.SetDeviceProperty(request.Key, TimeSpan.FromSeconds(request.ValueInSeconds));
+
+        return NoContent();
+    }
 }

@@ -11,4 +11,104 @@
 
 <div class="container">
     <h1>Configuration</h1>
+
+    @if (isLoading)
+    {
+        <p>
+            Loading...
+        </p>
+    }
+    else if (deviceProperties is not null)
+    {
+        <p>
+            <b>Camera image capture interval:</b> <span>@deviceProperties.CameraInterval</span>
+            <br />
+            <b>Environment sensor report interval:</b> <span>@deviceProperties.EnvironmentInterval</span>
+            <br />
+            <button class="btn btn-secondary" @onclick="RefreshProperties">Refresh</button>
+        </p>
+    }
+    else
+    {
+        <p>Error retrieving device properties</p>
+    }
+
+    <div class="row">
+        <div class="col">
+            <label for="cameraIntervalInput" class="form-label">Set camera interval</label>
+            <div class="input-group">
+                <input type="email" class="form-control align-content-end" id="cameraIntervalInput" @bind-value=newCameraIntervalSeconds />
+                <span class="input-group-text">seconds</span>
+                <button class="btn btn-outline-secondary" @onclick="SaveCameraInterval">Save</button>
+            </div>
+        </div>
+        <div class="col">
+            <label for="environmentIntevalInput" class="form-label">Set environment sensor report interval</label>
+            <div class="input-group">
+                <input type="email" class="form-control align-content-end" id="environmentIntevalInput" @bind-value=newEnvironmentIntervalSeconds />
+                <span class="input-group-text">seconds</span>
+                <button class="btn btn-outline-secondary" @onclick="SaveEnvironmentInterval">Save</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+@code {
+    private DeviceProperties? deviceProperties;
+
+    private bool isLoading = false;
+
+    private int newCameraIntervalSeconds = 0;
+    private int newEnvironmentIntervalSeconds = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshProperties();
+    }
+
+    protected async Task RefreshProperties()
+    {
+        deviceProperties = await GetDevicePropertiesAsync();
+
+        if (deviceProperties is not null)
+        {
+            newCameraIntervalSeconds = (int)deviceProperties.CameraInterval.TotalSeconds;
+            newEnvironmentIntervalSeconds = (int)deviceProperties.EnvironmentInterval.TotalSeconds;
+        }
+    }
+
+    protected async Task SaveCameraInterval()
+    {
+        await SaveInterval(nameof(deviceProperties.CameraInterval), newCameraIntervalSeconds);
+    }
+
+    protected async Task SaveEnvironmentInterval()
+    {
+        await SaveInterval(nameof(deviceProperties.EnvironmentInterval), newEnvironmentIntervalSeconds);
+    }
+
+    private async Task<DeviceProperties?> GetDevicePropertiesAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            return await Http.GetFromJsonAsync<DeviceProperties>($"Device/Properties");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveInterval(string key, int valueInSeconds)
+    {
+        var request = new DeviceIntervalUpdateRequest
+            {
+                Key = key,
+                ValueInSeconds = valueInSeconds,
+            };
+
+        await Http.PostAsJsonAsync($"Device/Interval", request);
+    }
+}
