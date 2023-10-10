@@ -20,6 +20,10 @@ public class TemperatureHumiditySensor
             {
                 return temperature.DegreesCelsius;
             }
+            else
+            {
+                Console.Error.WriteLine($"Failed attempt {attempt} at reading temperature sensor");
+            }
 
             Thread.Sleep(100);
         }
@@ -36,6 +40,10 @@ public class TemperatureHumiditySensor
             if (sensor.TryReadHumidity(out var humidity))
             {
                 return humidity.Percent;
+            }
+            else
+            {
+                Console.Error.WriteLine($"Failed attempt {attempt} at reading humidity sensor");
             }
 
             Thread.Sleep(100);
