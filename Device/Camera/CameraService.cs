@@ -10,7 +10,7 @@ namespace PiPanel.Device.Camera;
 public class CameraService
 {
     private const string CameraImageTmpFilePath = "tmp/cameraimage.jpg";
-    
+
     private readonly DeviceClient deviceClient;
 
     public CameraService(DeviceClient deviceClient)
@@ -64,7 +64,13 @@ public class CameraService
 
         try
         {
-            await blobClient.UploadAsync(fileStream, new BlobUploadOptions());
+            await blobClient.UploadAsync(fileStream, new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = "image/jpeg",
+                },
+            });
         }
         catch
         {
