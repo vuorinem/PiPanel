@@ -3,27 +3,29 @@ using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 using PiPanel.Server.Models;
 using PiPanel.Server.Options;
-using PiPanel.Shared.Camera;
 using PiPanel.Shared.Environment;
 using System.Text.Json;
-using System.Threading;
 
 namespace PiPanel.Server.Services;
 
 public class EnvironmentService
 {
     private readonly BlobContainerClient containerClient;
-    private readonly StorageOptions options;
+    private readonly StorageOptions storageOptions;
+    private readonly IotOptions iotOptions;
     private readonly ILogger<EnvironmentService> logger;
 
     public EnvironmentService(
-        IOptions<StorageOptions> optionsSnapshot,
+        IOptions<StorageOptions> storageOptionsSnapshot,
+        IOptions<IotOptions> iotOptionsSnapshot,
         ILogger<EnvironmentService> logger)
     {
         this.logger = logger;
 
-        options = optionsSnapshot.Value;
-        containerClient = new BlobContainerClient(options.EnvironmentContainerUri, new DefaultAzureCredential());
+        storageOptions = storageOptionsSnapshot.Value;
+        iotOptions = iotOptionsSnapshot.Value;
+
+        containerClient = new BlobContainerClient(storageOptions.EnvironmentContainerUri, new DefaultAzureCredential());
     }
 
     public async Task<EnvironmentStatus?> GetLatestForDayAsync(DateOnly date)
@@ -42,7 +44,7 @@ public class EnvironmentService
 
     private async Task<List<string>> GetBlobNamesForDayAsync(DateOnly date)
     {
-        var blobPrefix = EnvironmentStatusNaming.GetBlobPrefixForDate(date);
+        var blobPrefix = EnvironmentStatusNaming.GetBlobPrefixForDate(iotOptions.HubName, date);
         var blobList = containerClient.GetBlobsAsync(prefix: blobPrefix);
 
         var blobNames = new List<string>();

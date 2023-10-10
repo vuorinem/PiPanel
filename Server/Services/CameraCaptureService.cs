@@ -9,22 +9,26 @@ namespace PiPanel.Server.Services;
 public class CameraCaptureService
 {
     private readonly BlobContainerClient containerClient;
-    private readonly StorageOptions options;
+    private readonly StorageOptions storgeOptions;
+    private readonly IotOptions iotOptions;
     private readonly ILogger<CameraCaptureService> logger;
 
     public CameraCaptureService(
-        IOptions<StorageOptions> optionsSnapshot,
+        IOptions<StorageOptions> storageOptionsSnapshot,
+        IOptions<IotOptions> iotOptionsSnapshot,
         ILogger<CameraCaptureService> logger)
     {
         this.logger = logger;
 
-        options = optionsSnapshot.Value;
-        containerClient = new BlobContainerClient(options.CaptureContainerUri, new DefaultAzureCredential());
+        storgeOptions = storageOptionsSnapshot.Value;
+        iotOptions = iotOptionsSnapshot.Value;
+
+        containerClient = new BlobContainerClient(storgeOptions.CaptureContainerUri, new DefaultAzureCredential());
     }
 
     public async Task<IEnumerable<CapturedImage>> GetCameraCaptures(DateOnly date, string label)
     {
-        var blobPrefix = CapturedImageNaming.GetBlobPrefixForDate(label, date);
+        var blobPrefix = CapturedImageNaming.GetBlobPrefixForDate(iotOptions.DeviceName, label, date);
         var blobList = containerClient.GetBlobsAsync(prefix: blobPrefix);
 
         var images = new List<CapturedImage>();

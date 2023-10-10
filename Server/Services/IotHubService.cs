@@ -28,7 +28,7 @@ public class IotHubService
 
     public async Task<PiPanelStatus> GetDevice()
     {
-        var deviceTwin = await registryManager.GetTwinAsync(PiPanelStatus.DeviceName);
+        var deviceTwin = await registryManager.GetTwinAsync(options.DeviceName);
 
         return new PiPanelStatus
         {
@@ -39,7 +39,7 @@ public class IotHubService
 
     public async Task<DeviceProperties> GetDeviceProperties()
     {
-        var deviceTwin = await registryManager.GetTwinAsync(PiPanelStatus.DeviceName);
+        var deviceTwin = await registryManager.GetTwinAsync(options.DeviceName);
         var reportedPropertiesJson = deviceTwin.Properties.Reported.ToJson();
 
         return JsonSerializer.Deserialize<DeviceProperties>(reportedPropertiesJson)
@@ -48,7 +48,7 @@ public class IotHubService
 
     public async Task SetDeviceProperty(string key, object value)
     {
-        var deviceTwin = await registryManager.GetTwinAsync(PiPanelStatus.DeviceName);
+        var deviceTwin = await registryManager.GetTwinAsync(options.DeviceName);
 
         var desiredProperties = new TwinCollection();
         desiredProperties[key] = value;

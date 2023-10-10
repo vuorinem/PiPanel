@@ -13,10 +13,10 @@ public static class CapturedImageNaming
         return $"{cameraLabel}/{datePath}/{timePath}.jpg";
     }
 
-    public static string GetBlobPrefixForDate(string cameraLabel, DateOnly date)
+    public static string GetBlobPrefixForDate(string deviceName, string cameraLabel, DateOnly date)
     {
         var datePath = date.ToString(DatePathFormat);
 
-        return $"{PiPanelStatus.DeviceName}/{cameraLabel}/{datePath}/";
+        return $"{deviceName}/{cameraLabel}/{datePath}/";
     }
 }
