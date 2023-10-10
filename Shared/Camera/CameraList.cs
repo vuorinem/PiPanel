@@ -2,7 +2,7 @@
 
 public static class CameraList
 {
-    public static readonly ICollection<CameraInfo> Cameras = new CameraInfo[]
+    public static readonly IList<CameraInfo> Cameras = new CameraInfo[]
     {
         new() {
             Label = "PiCam",

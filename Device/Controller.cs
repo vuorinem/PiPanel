@@ -1,7 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
+using Newtonsoft.Json.Linq;
 using PiPanel.Device.Camera;
 using PiPanel.Device.Environment;
+using PiPanel.Shared;
+using PiPanel.Shared.Camera;
 
 namespace PiPanel.Device;
 
@@ -9,23 +14,33 @@ public class Controller
 {
     private readonly DeviceClient deviceClient;
 
-    private bool isRunning = false;
+    private readonly DeviceProperties deviceProperties;
 
-    private TimeSpan controllerSleepInterval = TimeSpan.FromMinutes(1);
+    private readonly TimeSpan controllerSleepInterval = TimeSpan.FromMinutes(1);
+
+    private readonly TimeSpan DefaultCameraInterval = TimeSpan.FromMinutes(20);
+
+    private readonly TimeSpan DefaultEnvironmentInterval = TimeSpan.FromMinutes(5);
+
+    private bool isRunning = false;
 
     private CancellationTokenSource? controllerSleepTokenSource;
 
-    private TimeSpan cameraInterval = TimeSpan.FromMinutes(30);
-
     private Timer? cameraTimer;
-
-    private TimeSpan environmentInterval = TimeSpan.FromMinutes(5);
 
     private Timer? environmentTimer;
 
     public Controller(DeviceClient deviceClient)
     {
         this.deviceClient = deviceClient;
+
+        // Initialize with default properties
+        deviceProperties = new DeviceProperties
+        {
+            Cameras = CameraList.Cameras,
+            CameraInterval = DefaultCameraInterval,
+            EnvironmentInterval = DefaultEnvironmentInterval,
+        };
     }
 
     public async Task RunAsync()
@@ -34,13 +49,15 @@ public class Controller
 
         deviceClient.SetConnectionStatusChangesHandler(OnConnectionStatusChanges);
         await deviceClient.SetReceiveMessageHandlerAsync(OnReceiveMessage, null);
-        await deviceClient.SetMethodHandlerAsync(MethodNames.SetCameraInterval, OnSetCameraIntervalAsync, null);
+        await deviceClient.SetDesiredPropertyUpdateCallbackAsync(OnDesiredPropertyChangedAsync, null);
+
+        await ReportCurrentPropertiesAsync();
 
         var cameraService = new CameraService(deviceClient);
-        cameraTimer = new Timer(cameraService.ExecuteAsync, null, TimeSpan.Zero, cameraInterval);
+        cameraTimer = new Timer(cameraService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.CameraInterval);
 
         var environmentService = new EnvironmentService(deviceClient);
-        environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, environmentInterval);
+        environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.EnvironmentInterval);
 
         Console.WriteLine("Starting controller");
 
@@ -78,27 +95,13 @@ public class Controller
         controllerSleepTokenSource?.Cancel();
     }
 
-    private async Task<MethodResponse> OnSetCameraIntervalAsync(MethodRequest methodRequest, object userContext)
+    private async Task OnDesiredPropertyChangedAsync(TwinCollection desiredProperties, object userContext)
     {
-        await Task.CompletedTask;
+        Console.WriteLine("Received property changed notification");
 
-        try
-        {
-            var intervalInSeconds = JsonSerializer.Deserialize<int>(methodRequest.DataAsJson);
+        Console.WriteLine(JsonSerializer.Serialize(desiredProperties));
 
-            Console.WriteLine($"Hub set camera interval to {intervalInSeconds} seconds");
-
-            cameraInterval = TimeSpan.FromSeconds(intervalInSeconds);
-            cameraTimer?.Change(TimeSpan.Zero, cameraInterval);
-
-            return new MethodResponse(0);
-        }
-        catch
-        {
-            Console.WriteLine($"Hub set camera intercal with invalid value '{methodRequest.Data}'");
-
-            return new MethodResponse((int)MethodResponseStatusCode.BadRequest);
-        }
+        await UpdateDeviceProperties(desiredProperties);
     }
 
     private async Task OnReceiveMessage(Message message, object userContext)
@@ -111,8 +114,86 @@ public class Controller
         await deviceClient.CompleteAsync(message);
     }
 
-    private void OnConnectionStatusChanges(ConnectionStatus status, ConnectionStatusChangeReason reason)
+    private async void OnConnectionStatusChanges(ConnectionStatus status, ConnectionStatusChangeReason reason)
     {
         Console.WriteLine($"Connection status: {status} ({reason})");
+
+        if (status == ConnectionStatus.Connected)
+        {
+            var deviceTwin = await deviceClient.GetTwinAsync();
+
+            await UpdateDeviceProperties(deviceTwin.Properties.Desired);
+        }
+    }
+
+    private async Task UpdateDeviceProperties(TwinCollection desiredProperties)
+    {
+        var reportedProperties = new TwinCollection();
+
+        foreach (KeyValuePair<string, object> property in desiredProperties)
+        {
+            switch (property.Key)
+            {
+                case nameof(DeviceProperties.CameraInterval):
+                    if (TryGetValueFromProperty<TimeSpan>(property.Value, out var desiredCameraInterval))
+                    {
+                        deviceProperties.CameraInterval = desiredCameraInterval;
+                        cameraTimer?.Change(TimeSpan.Zero, deviceProperties.CameraInterval);
+                        reportedProperties[nameof(DeviceProperties.CameraInterval)] = property.Value;
+
+                        Console.WriteLine("Camera interval set to {0}", deviceProperties.CameraInterval);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse camera interval from value {0}", property.Value);
+                    }
+                    break;
+
+                case nameof(DeviceProperties.EnvironmentInterval):
+                    if (TryGetValueFromProperty<TimeSpan>(property.Value, out var desiredEnvironmentInterval))
+                    {
+                        deviceProperties.EnvironmentInterval = desiredEnvironmentInterval;
+                        environmentTimer?.Change(TimeSpan.Zero, deviceProperties.EnvironmentInterval);
+                        reportedProperties[nameof(DeviceProperties.EnvironmentInterval)] = property.Value;
+
+                        Console.WriteLine("Environment interval set to {0}", deviceProperties.EnvironmentInterval);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse environment interval from value {0}", property.Value);
+                    }
+                    break;
+
+                default:
+                    Console.WriteLine("Unknown device property {0}: {1}", property.Key, property.Value);
+                    break;
+            }
+        }
+
+        await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+    }
+
+    private bool TryGetValueFromProperty<T>(object propertyValue, out T? value)
+    {
+        if (propertyValue is JValue jsonValue)
+        {
+            value = jsonValue.ToObject<T>();
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
+        }
+    }
+
+    private async Task ReportCurrentPropertiesAsync()
+    {
+        var reportedProperties = new TwinCollection();
+
+        reportedProperties[nameof(deviceProperties.CameraInterval)] = deviceProperties.CameraInterval;
+        reportedProperties[nameof(deviceProperties.EnvironmentInterval)] = deviceProperties.EnvironmentInterval;
+
+        await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }
 }
