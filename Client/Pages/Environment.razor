@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.CircularGauge
 @using PiPanel.Shared
 @using PiPanel.Shared.Environment;
 @attribute [Authorize]
@@ -13,7 +14,7 @@
     <h1>Environment</h1>
 
     <p>
-        <b>Day:</b> @selectedDate.ToShortDateString()<br />
+        <b>Day:</b> @selectedDate.ToShortDateString() (UTC)<br />
     </p>
 
     <p class="justify-content-center">
@@ -21,74 +22,176 @@
         <button @onclick="() => ChangeDate(1)">Next day <span class="oi oi-caret-right"></span></button>
     </p>
 
-    <p>
-        <button class="btn btn-secondary" @onclick="RefreshStatus">Refresh</button>
-    </p>
 
     @if (isLoading)
     {
-        <p>
+        <p class="alert alert-info">
             Loading...
         </p>
     }
     else
     {
         <p>
-            <b>Latest temperature: </b>
-            @if(@latestWithTemperature is not null){
-                <span>@latestWithTemperature.Temperature °C (at @latestWithTemperature.MeasuredAt.ToShortTimeString())</span>
-            } else
-            {
-                <span>Not available</span>
-            }
-
-            <br />
-
-            <b>Latest humidity: </b>
-            @if (latestWithHumidity is not null)
-            {
-                <span>@latestWithHumidity.Humidity % (at @latestWithHumidity.MeasuredAt.ToShortTimeString())</span>
-            }
-            else
-            {
-                <span>Not available</span>
-            }
+            <button class="btn btn-secondary" @onclick="RefreshStatus">Refresh</button>
         </p>
+    }
+
+    @if (sfIsInitialized)
+    {
+        <div class="d-flex">
+            <div>
+                <SfCircularGauge Title="Temperature">
+                    <CircularGaugeTitleStyle Size="20" FontWeight="bold"></CircularGaugeTitleStyle>
+
+                    <CircularGaugeAxes>
+                        <CircularGaugeAxis Minimum="@MinTemperature"
+                                           Maximum="@MaxTemperature">
+
+                            <CircularGaugeAxisLabelStyle Format="{value}°C"></CircularGaugeAxisLabelStyle>
+
+                            <CircularGaugePointers>
+                                <CircularGaugePointer Value="@(latestWithTemperature?.Temperature ?? MinTemperature)"></CircularGaugePointer>
+                                <CircularGaugePointer Value="@dailyAverageTemperature"
+                                                      Type="PointerType.Marker"
+                                                      MarkerShape="GaugeShape.Rectangle">
+                                </CircularGaugePointer>
+                            </CircularGaugePointers>
+
+                            <CircularGaugeRanges>
+                                <CircularGaugeRange Start="@dailyMinTemperature" End="@dailyMaxTemperature" LegendText="Daily Range" Radius="80%"></CircularGaugeRange>
+                                <CircularGaugeRange Start="@MinTemperature" End="@MaxTemperature">
+                                    <LinearGradient StartValue="10%" EndValue="90%">
+                                        <ColorStops>
+                                            <ColorStop Opacity="0.5" Offset="10%" Color="#0000ff"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="40%" Color="#00ff00"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="90%" Color="#ff0000"></ColorStop>
+                                        </ColorStops>
+                                    </LinearGradient>
+                                </CircularGaugeRange>
+                            </CircularGaugeRanges>
+
+                        </CircularGaugeAxis>
+                    </CircularGaugeAxes>
+                </SfCircularGauge>
+            </div>
+            <div>
+                <SfCircularGauge Title="Humidity">
+                    <CircularGaugeTitleStyle Size="20" FontWeight="bold"></CircularGaugeTitleStyle>
+
+                    <CircularGaugeAxes>
+                        <CircularGaugeAxis Minimum="@MinHumidity"
+                                           Maximum="@MaxHumidity">
+
+                            <CircularGaugeAxisLabelStyle Format="{value}%"></CircularGaugeAxisLabelStyle>
+
+                            <CircularGaugePointers>
+                                <CircularGaugePointer Value="@(latestWithHumidity?.Humidity ?? MinHumidity)"></CircularGaugePointer>
+                                <CircularGaugePointer Value="@dailyAverageHumidity"
+                                                      Type="PointerType.Marker"
+                                                      MarkerShape="GaugeShape.Rectangle">
+                                </CircularGaugePointer>
+                            </CircularGaugePointers>
+
+                            <CircularGaugeRanges>
+                                <CircularGaugeRange Start="@dailyMinHumidity" End="@dailyMaxHumidity" LegendText="Daily Range" Radius="80%"></CircularGaugeRange>
+                                <CircularGaugeRange Start="@MinHumidity" End="@MaxHumidity">
+                                    <LinearGradient StartValue="10%" EndValue="90%">
+                                        <ColorStops>
+                                            <ColorStop Opacity="0.5" Offset="0%" Color="#00ff00"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="100%" Color="#ff0000"></ColorStop>
+                                        </ColorStops>
+                                    </LinearGradient>
+                                </CircularGaugeRange>
+                            </CircularGaugeRanges>
+
+                        </CircularGaugeAxis>
+                    </CircularGaugeAxes>
+                </SfCircularGauge>
+            </div>
+        </div>
+
+        <div class="m-3">
+            <SfChart>
+                <ChartPrimaryXAxis IntervalType="IntervalType.Minutes" Interval="1" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"></ChartPrimaryXAxis>
+
+                <ChartAxes>
+                    <ChartAxis Name="TemperatureAxis"
+                               LabelFormat="{value}°C"
+                               Minimum="@MinTemperature"
+                               Maximum="@MaxTemperature"></ChartAxis>
+                    <ChartAxis Name="HumidityAxis"
+                               LabelFormat="{value}%"
+                               Minimum="@MinHumidity"
+                               Maximum="@MaxHumidity"
+                               OpposedPosition="true"></ChartAxis>
+                </ChartAxes>
+
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@environmentStatuses"
+                                 Name="Temperature"
+                                 XName="MeasuredAt"
+                                 YName="Temperature"
+                                 YAxisName="TemperatureAxis"
+                                 Type="ChartSeriesType.Line"></ChartSeries>
+                    <ChartSeries DataSource="@environmentStatuses"
+                                 Name="Humidity"
+                                 XName="MeasuredAt"
+                                 YName="Humidity"
+                                 YAxisName="HumidityAxis"
+                                 Type="ChartSeriesType.Line"></ChartSeries>
+                </ChartSeriesCollection>
+
+                <ChartLegendSettings Visible="true" />
+            </SfChart>
+        </div>
     }
 </div>
 
-<SfChart>
-    <ChartPrimaryXAxis IntervalType="IntervalType.Minutes" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"></ChartPrimaryXAxis>
-
-    <ChartAxes>
-        <ChartAxis Name="TemperatureAxis" LabelFormat="{value} °C"></ChartAxis>
-        <ChartAxis Name="HumidityAxis" LabelFormat="{value} %" OpposedPosition="true"></ChartAxis>
-    </ChartAxes>
-
-    <ChartSeriesCollection>
-        <ChartSeries DataSource="@environmentStatuses" XName="MeasuredAt" YName="Temperature" YAxisName="TemperatureAxis" Type="ChartSeriesType.Line"></ChartSeries>
-        <ChartSeries DataSource="@environmentStatuses" XName="MeasuredAt" YName="Humidity" YAxisName="HumidityAxis" Type="ChartSeriesType.Line"></ChartSeries>
-    </ChartSeriesCollection>
-</SfChart>
-
 @code {
-    private DateOnly selectedDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly selectedDate = DateOnly.FromDateTime(DateTime.UtcNow);
     private List<EnvironmentStatus> environmentStatuses = new();
     private EnvironmentStatus? latestWithTemperature;
     private EnvironmentStatus? latestWithHumidity;
+    private double dailyMinTemperature = MinTemperature;
+    private double dailyMaxTemperature = MaxTemperature;
+    private double dailyAverageTemperature = (MinTemperature + MaxTemperature) / 2;
+    private double dailyMinHumidity = MinHumidity;
+    private double dailyMaxHumidity = MaxHumidity;
+    private double dailyAverageHumidity = (MinHumidity + MaxHumidity) / 2;
 
-    private bool isLoading = false;
+    private const double MinTemperature = 15;
+    private const double MaxTemperature = 35;
+    private const double MinHumidity = 30;
+    private const double MaxHumidity = 70;
+
+    private bool isLoading = true;
+    private bool sfIsInitialized = false;
 
     protected override async Task OnInitializedAsync()
     {
+        var sfKey = await Http.GetStringAsync("System/SyncfusionKey");
+        Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(sfKey);
+        sfIsInitialized = true;
+
         await RefreshStatus();
     }
 
     protected async Task RefreshStatus()
     {
         environmentStatuses = await GetEnvironmentStatusesAsync(selectedDate) ?? new List<EnvironmentStatus>();
+
         latestWithTemperature = environmentStatuses.LastOrDefault(status => status.Temperature is not null);
         latestWithHumidity = environmentStatuses.LastOrDefault(status => status.Humidity is not null);
+
+        dailyMinTemperature = environmentStatuses.Min(status => status.Temperature) ?? MinTemperature;
+        dailyMaxTemperature = environmentStatuses.Max(status => status.Temperature) ?? MaxTemperature;
+        dailyMinHumidity = environmentStatuses.Min(status => status.Humidity) ?? MinHumidity;
+        dailyMaxHumidity = environmentStatuses.Max(status => status.Humidity) ?? MaxHumidity;
+
+        dailyAverageTemperature = environmentStatuses.Average(status => status.Temperature) ?? 0;
+        dailyAverageHumidity = environmentStatuses.Average(status => status.Humidity) ?? 0;
+
+        StateHasChanged();
     }
 
     protected async Task ChangeDate(int daysChanged)

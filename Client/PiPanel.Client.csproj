@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
@@ -16,6 +16,8 @@
 		<PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.22" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
 		<PackageReference Include="Syncfusion.Blazor.Charts" Version="23.1.40" />
+		<PackageReference Include="Syncfusion.Blazor.CircularGauge" Version="23.1.40" />
+		<PackageReference Include="Syncfusion.Licensing" Version="23.1.40" />
 	</ItemGroup>
 
 	<ItemGroup>

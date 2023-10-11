@@ -14,6 +14,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+builder.Services.Configure<SystemOptions>(builder.Configuration.GetSection("System"));
 builder.Services.Configure<IotOptions>(builder.Configuration.GetSection("Iot"));
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
 

@@ -1,7 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Extensions.Options;
 using PiPanel.Server.Models;
 using PiPanel.Server.Options;
@@ -56,7 +55,10 @@ public class EnvironmentService
             }
         }
 
-        await SaveAggregatedStatusesByDate(date, environmentStatuses);
+        if (environmentStatuses.Any())
+        {
+            await SaveAggregatedStatusesByDate(date, environmentStatuses);
+        }
 
         logger.LogDebug("Collected {Count} environment statuses for {Date}", environmentStatuses.Count, date);
 
