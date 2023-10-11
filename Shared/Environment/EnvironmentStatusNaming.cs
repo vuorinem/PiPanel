@@ -11,4 +11,10 @@ public static class EnvironmentStatusNaming
 
         return $"{hubName}/{datePath}/";
     }
+    public static string GetAggregateBlobNameForDate(string hubName, DateOnly date)
+    {
+        var datePath = date.ToString(DatePathFormat);
+
+        return $"{hubName}/{datePath}.json";
+    }
 }

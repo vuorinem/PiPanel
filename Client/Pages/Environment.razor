@@ -1,6 +1,7 @@
 ﻿@page "/environment"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Syncfusion.Blazor.Charts
 @using PiPanel.Shared
 @using PiPanel.Shared.Environment;
 @attribute [Authorize]
@@ -20,33 +21,61 @@
         <button @onclick="() => ChangeDate(1)">Next day <span class="oi oi-caret-right"></span></button>
     </p>
 
+    <p>
+        <button class="btn btn-secondary" @onclick="RefreshStatus">Refresh</button>
+    </p>
+
     @if (isLoading)
     {
         <p>
             Loading...
         </p>
     }
-    else if (environmentStatus is not null)
-    {
-        <p>
-            <b>Measured At:</b> <span>@environmentStatus.MeasuredAt.ToShortTimeString()</span>
-            <br />
-            <b>Temperature:</b> <span>@environmentStatus?.Temperature °C</span>
-            <br />
-            <b>Humidity:</b> <span>@environmentStatus?.Humidity %</span>
-        </p>
-    }
     else
     {
         <p>
-            No data available
+            <b>Latest temperature: </b>
+            @if(@latestWithTemperature is not null){
+                <span>@latestWithTemperature.Temperature °C (at @latestWithTemperature.MeasuredAt.ToShortTimeString())</span>
+            } else
+            {
+                <span>Not available</span>
+            }
+
+            <br />
+
+            <b>Latest humidity: </b>
+            @if (latestWithHumidity is not null)
+            {
+                <span>@latestWithHumidity.Humidity % (at @latestWithHumidity.MeasuredAt.ToShortTimeString())</span>
+            }
+            else
+            {
+                <span>Not available</span>
+            }
         </p>
     }
 </div>
 
+<SfChart>
+    <ChartPrimaryXAxis IntervalType="IntervalType.Minutes" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"></ChartPrimaryXAxis>
+
+    <ChartAxes>
+        <ChartAxis Name="TemperatureAxis" LabelFormat="{value} °C"></ChartAxis>
+        <ChartAxis Name="HumidityAxis" LabelFormat="{value} %" OpposedPosition="true"></ChartAxis>
+    </ChartAxes>
+
+    <ChartSeriesCollection>
+        <ChartSeries DataSource="@environmentStatuses" XName="MeasuredAt" YName="Temperature" YAxisName="TemperatureAxis" Type="ChartSeriesType.Line"></ChartSeries>
+        <ChartSeries DataSource="@environmentStatuses" XName="MeasuredAt" YName="Humidity" YAxisName="HumidityAxis" Type="ChartSeriesType.Line"></ChartSeries>
+    </ChartSeriesCollection>
+</SfChart>
+
 @code {
     private DateOnly selectedDate = DateOnly.FromDateTime(DateTime.Today);
-    private EnvironmentStatus? environmentStatus;
+    private List<EnvironmentStatus> environmentStatuses = new();
+    private EnvironmentStatus? latestWithTemperature;
+    private EnvironmentStatus? latestWithHumidity;
 
     private bool isLoading = false;
 
@@ -57,37 +86,25 @@
 
     protected async Task RefreshStatus()
     {
-        environmentStatus = await GetEnvironmentStatusAsync(selectedDate);
+        environmentStatuses = await GetEnvironmentStatusesAsync(selectedDate) ?? new List<EnvironmentStatus>();
+        latestWithTemperature = environmentStatuses.LastOrDefault(status => status.Temperature is not null);
+        latestWithHumidity = environmentStatuses.LastOrDefault(status => status.Humidity is not null);
     }
 
     protected async Task ChangeDate(int daysChanged)
     {
-        environmentStatus = null;
-
         selectedDate = selectedDate.AddDays(daysChanged);
 
         await RefreshStatus();
     }
 
-    private async Task<EnvironmentStatus?> GetEnvironmentStatusAsync(DateOnly date)
+    private async Task<List<EnvironmentStatus>?> GetEnvironmentStatusesAsync(DateOnly date)
     {
         isLoading = true;
 
         try
         {
-            var response = await Http.GetAsync($"Environment?date={selectedDate.ToString(EnvironmentStatusNaming.DatePathFormat)}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
-            {
-                return null;
-            }
-
-            return await response.Content.ReadFromJsonAsync<EnvironmentStatus>();
+            return await Http.GetFromJsonAsync<List<EnvironmentStatus>>($"Environment?date={selectedDate.ToString(EnvironmentStatusNaming.DatePathFormat)}");
         }
         finally
         {

@@ -1,5 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Extensions.Options;
 using PiPanel.Server.Models;
 using PiPanel.Server.Options;
@@ -28,37 +30,104 @@ public class EnvironmentService
         containerClient = new BlobContainerClient(storageOptions.EnvironmentContainerUri, new DefaultAzureCredential());
     }
 
-    public async Task<EnvironmentStatus?> GetLatestForDayAsync(DateOnly date)
+    public async Task<IList<EnvironmentStatus>> GetStatusesByDateAsync(DateOnly date)
     {
-        var blobNames = await GetBlobNamesForDayAsync(date);
+        logger.LogDebug("Retrieving environment statuses for {Date}", date);
 
-        if (!blobNames.Any())
+        (var environmentStatuses, var aggregatedAt) = await GetAggregatedStatusesByDateAsync(date);
+
+        if (aggregatedAt is not null && DateOnly.FromDateTime(aggregatedAt.Value.Date) > date)
         {
-            return null;
+            logger.LogDebug("All environment statuses from {Date} are included in the aggregate, no need to get individual blobs", date);
+            return environmentStatuses;
         }
 
-        var environmentStatuses = await GetStatusesFromBlobAsync(blobNames.Last());
+        var blobs = await GetBlobNamesForDayAsync(date);
 
-        return environmentStatuses.LastOrDefault();
+        foreach (var blob in blobs)
+        {
+            if (aggregatedAt is null || blob.modifiedAt > aggregatedAt)
+            {
+                environmentStatuses.AddRange(await GetStatusesFromBlobAsync(blob.name));
+            }
+            else
+            {
+                logger.LogDebug("Blob {BlobName} already included in the aggregate for {Date}", blob.name, date);
+            }
+        }
+
+        await SaveAggregatedStatusesByDate(date, environmentStatuses);
+
+        logger.LogDebug("Collected {Count} environment statuses for {Date}", environmentStatuses.Count, date);
+
+        return environmentStatuses;
     }
 
-    private async Task<List<string>> GetBlobNamesForDayAsync(DateOnly date)
+    private async Task<(List<EnvironmentStatus> environmentStatuses, DateTimeOffset? lastModifiedAt)> GetAggregatedStatusesByDateAsync(DateOnly date)
     {
+        logger.LogDebug("Retrieving aggregated environment statuses for {Date}", date);
+
+        var blobName = EnvironmentStatusNaming.GetAggregateBlobNameForDate(iotOptions.HubName, date);
+        var blobClient = containerClient.GetBlobClient(blobName);
+
+        if (!await blobClient.ExistsAsync())
+        {
+            logger.LogDebug("No aggregated file found for {Date}", date);
+
+            return (new List<EnvironmentStatus>(), null);
+        }
+
+        var blobContent = await blobClient.DownloadContentAsync();
+
+        var environmentStatuses = blobContent.Value.Content.ToObjectFromJson<List<EnvironmentStatus>>();
+
+        logger.LogDebug("Found {Count} aggregated statuses for {Date}", environmentStatuses.Count, date);
+
+        return (environmentStatuses, blobContent.Value.Details.LastModified);
+    }
+
+    private async Task SaveAggregatedStatusesByDate(DateOnly date, List<EnvironmentStatus> environmentStatuses)
+    {
+        logger.LogDebug("Storing {Count} aggregated environment statuses for {Date}", environmentStatuses.Count, date);
+
+        var blobName = EnvironmentStatusNaming.GetAggregateBlobNameForDate(iotOptions.HubName, date);
+        var blobClient = containerClient.GetBlobClient(blobName);
+
+        var jsonContent = JsonSerializer.Serialize(environmentStatuses);
+
+        await blobClient.UploadAsync(BinaryData.FromString(jsonContent), new BlobUploadOptions
+        {
+            HttpHeaders = new BlobHttpHeaders
+            {
+                ContentType = "application/json",
+                ContentEncoding = "utf-8",
+            },
+        });
+    }
+
+    private async Task<List<(string name, DateTimeOffset modifiedAt)>> GetBlobNamesForDayAsync(DateOnly date)
+    {
+        logger.LogDebug("Retrieving environment status blobs for {Date}", date);
+
         var blobPrefix = EnvironmentStatusNaming.GetBlobPrefixForDate(iotOptions.HubName, date);
         var blobList = containerClient.GetBlobsAsync(prefix: blobPrefix);
 
-        var blobNames = new List<string>();
+        var blobs = new List<(string, DateTimeOffset)>();
 
         await foreach (var blob in blobList)
         {
-            blobNames.Add(blob.Name);
+            blobs.Add((blob.Name, GetBlobModifiedAt(blob, date, blobPrefix)));
         }
 
-        return blobNames;
+        logger.LogDebug("Found {Count} environment status blobs for {Date}", blobs.Count, date);
+
+        return blobs;
     }
 
     private async Task<List<EnvironmentStatus>> GetStatusesFromBlobAsync(string blobName)
     {
+        logger.LogDebug("Reading environment statuses from blob {BlobName}", blobName);
+
         var blobClient = containerClient.GetBlobClient(blobName);
         var blobExists = await blobClient.ExistsAsync();
 
@@ -66,6 +135,8 @@ public class EnvironmentService
 
         if (!blobExists.Value)
         {
+            logger.LogWarning("Blob with name {BlobName} does not exist", blobName);
+
             return environmentStatuses;
         }
 
@@ -86,8 +157,22 @@ public class EnvironmentService
             environmentStatuses.Add(iotEvent.Body);
         }
 
+        logger.LogDebug("Parsed {Count} environment statuses from blob {BlobName}", environmentStatuses.Count, blobName);
+
         return environmentStatuses
             .OrderBy(status => status.MeasuredAt)
             .ToList();
+    }
+
+    private static DateTimeOffset GetBlobModifiedAt(BlobItem blob, DateOnly date, string blobPrefix)
+    {
+        if (blob.Properties.LastModified.HasValue)
+        {
+            return blob.Properties.LastModified.Value;
+        }
+
+        var timeFromBlobName = TimeOnly.ParseExact(blob.Name.Substring(blobPrefix.Length, EnvironmentStatusNaming.TimePathFormat.Length), EnvironmentStatusNaming.TimePathFormat);
+
+        return new DateTimeOffset(date.ToDateTime(timeFromBlobName));
     }
 }

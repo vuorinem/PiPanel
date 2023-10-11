@@ -25,8 +25,8 @@ public class EnvironmentController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<EnvironmentStatus?> GetLatestForDateAsync(string date)
+    public async Task<IList<EnvironmentStatus>> GetByDateAsync(string date)
     {
-        return await environmentService.GetLatestForDayAsync(DateOnly.ParseExact(date, EnvironmentStatusNaming.DatePathFormat));
+        return await environmentService.GetStatusesByDateAsync(DateOnly.ParseExact(date, EnvironmentStatusNaming.DatePathFormat));
     }
 }
