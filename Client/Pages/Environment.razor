@@ -38,7 +38,7 @@
 
     @if (sfIsInitialized)
     {
-        <div class="d-flex">
+        <div class="d-md-flex">
             <div>
                 <SfCircularGauge Title="Temperature" Width="100%">
                     <CircularGaugeTitleStyle Size="20" FontWeight="bold"></CircularGaugeTitleStyle>
@@ -145,7 +145,9 @@
                                  ZOrder="2"
                                  Fill="#2E8E00"
                                  Opacity="0.9"
-                                 Type="ChartSeriesType.Line"></ChartSeries>
+                                 Type="ChartSeriesType.Line">
+                        <ChartEmptyPointSettings Mode="EmptyPointMode.Drop" Fill="#000"></ChartEmptyPointSettings>
+                    </ChartSeries>
                     <ChartSeries DataSource="@environmentStatuses"
                                  Name="Humidity"
                                  XName="MeasuredAt"
@@ -155,7 +157,9 @@
                                  ZOrder="1"
                                  Fill="#0000ff"
                                  Opacity="0.9"
-                                 Type="ChartSeriesType.Line"></ChartSeries>
+                                 Type="ChartSeriesType.Line">
+                        <ChartEmptyPointSettings Mode="EmptyPointMode.Drop" Fill="#000"></ChartEmptyPointSettings>
+                    </ChartSeries>
                 </ChartSeriesCollection>
 
                 <ChartLegendSettings Visible="true" />
