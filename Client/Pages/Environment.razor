@@ -40,7 +40,7 @@
     {
         <div class="d-flex">
             <div>
-                <SfCircularGauge Title="Temperature">
+                <SfCircularGauge Title="Temperature" Width="100%">
                     <CircularGaugeTitleStyle Size="20" FontWeight="bold"></CircularGaugeTitleStyle>
 
                     <CircularGaugeAxes>
@@ -50,8 +50,11 @@
                             <CircularGaugeAxisLabelStyle Format="{value}°C"></CircularGaugeAxisLabelStyle>
 
                             <CircularGaugePointers>
-                                <CircularGaugePointer Value="@(latestWithTemperature?.Temperature ?? MinTemperature)"></CircularGaugePointer>
+                                <CircularGaugePointer Value="@(latestWithTemperature?.Temperature ?? MinTemperature)"
+                                                      Text="Latest Temperature"></CircularGaugePointer>
                                 <CircularGaugePointer Value="@dailyAverageTemperature"
+                                                      Text="Daily Average Temperature"
+                                                      MarkerWidth="10"
                                                       Type="PointerType.Marker"
                                                       MarkerShape="GaugeShape.Rectangle">
                                 </CircularGaugePointer>
@@ -59,23 +62,24 @@
 
                             <CircularGaugeRanges>
                                 <CircularGaugeRange Start="@dailyMinTemperature" End="@dailyMaxTemperature" LegendText="Daily Range" Radius="80%"></CircularGaugeRange>
-                                <CircularGaugeRange Start="@MinTemperature" End="@MaxTemperature">
-                                    <LinearGradient StartValue="10%" EndValue="90%">
+                                <CircularGaugeRange Start="@MinTemperature" End="@MaxTemperature" LegendText="Max Range">
+                                    <LinearGradient StartValue="1%" EndValue="99%">
                                         <ColorStops>
-                                            <ColorStop Opacity="0.5" Offset="10%" Color="#0000ff"></ColorStop>
-                                            <ColorStop Opacity="0.5" Offset="40%" Color="#00ff00"></ColorStop>
-                                            <ColorStop Opacity="0.5" Offset="90%" Color="#ff0000"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="1%" Color="#0000ff"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="@IdealTemperaturePercentage" Color="#00ff00"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="99%" Color="#ff0000"></ColorStop>
                                         </ColorStops>
                                     </LinearGradient>
                                 </CircularGaugeRange>
                             </CircularGaugeRanges>
-
                         </CircularGaugeAxis>
+
+                        <CircularGaugeLegendSettings Visible="true" Position="Syncfusion.Blazor.CircularGauge.LegendPosition.Bottom"></CircularGaugeLegendSettings>
                     </CircularGaugeAxes>
                 </SfCircularGauge>
             </div>
             <div>
-                <SfCircularGauge Title="Humidity">
+                <SfCircularGauge Title="Humidity" Width="100%">
                     <CircularGaugeTitleStyle Size="20" FontWeight="bold"></CircularGaugeTitleStyle>
 
                     <CircularGaugeAxes>
@@ -85,8 +89,11 @@
                             <CircularGaugeAxisLabelStyle Format="{value}%"></CircularGaugeAxisLabelStyle>
 
                             <CircularGaugePointers>
-                                <CircularGaugePointer Value="@(latestWithHumidity?.Humidity ?? MinHumidity)"></CircularGaugePointer>
+                                <CircularGaugePointer Value="@(latestWithHumidity?.Humidity ?? MinHumidity)"
+                                                      Text="Latest Humidity"></CircularGaugePointer>
                                 <CircularGaugePointer Value="@dailyAverageHumidity"
+                                                      Text="Daily Average Humidity"
+                                                      MarkerWidth="10"
                                                       Type="PointerType.Marker"
                                                       MarkerShape="GaugeShape.Rectangle">
                                 </CircularGaugePointer>
@@ -94,17 +101,19 @@
 
                             <CircularGaugeRanges>
                                 <CircularGaugeRange Start="@dailyMinHumidity" End="@dailyMaxHumidity" LegendText="Daily Range" Radius="80%"></CircularGaugeRange>
-                                <CircularGaugeRange Start="@MinHumidity" End="@MaxHumidity">
-                                    <LinearGradient StartValue="10%" EndValue="90%">
+                                <CircularGaugeRange Start="@MinHumidity" End="@MaxHumidity" LegendText="Max Range">
+                                    <LinearGradient StartValue="1%" EndValue="99%">
                                         <ColorStops>
-                                            <ColorStop Opacity="0.5" Offset="0%" Color="#00ff00"></ColorStop>
-                                            <ColorStop Opacity="0.5" Offset="100%" Color="#ff0000"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="1%" Color="#0000ff"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="@IdealHumidityPercentage" Color="#00ff00"></ColorStop>
+                                            <ColorStop Opacity="0.5" Offset="99%" Color="#ff0000"></ColorStop>
                                         </ColorStops>
                                     </LinearGradient>
                                 </CircularGaugeRange>
                             </CircularGaugeRanges>
-
                         </CircularGaugeAxis>
+
+                        <CircularGaugeLegendSettings Visible="true" Position="Syncfusion.Blazor.CircularGauge.LegendPosition.Bottom"></CircularGaugeLegendSettings>
                     </CircularGaugeAxes>
                 </SfCircularGauge>
             </div>
@@ -112,7 +121,7 @@
 
         <div class="m-3">
             <SfChart>
-                <ChartPrimaryXAxis IntervalType="IntervalType.Minutes" Interval="1" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"></ChartPrimaryXAxis>
+                <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"></ChartPrimaryXAxis>
 
                 <ChartAxes>
                     <ChartAxis Name="TemperatureAxis"
@@ -132,12 +141,20 @@
                                  XName="MeasuredAt"
                                  YName="Temperature"
                                  YAxisName="TemperatureAxis"
+                                 Width="3"
+                                 ZOrder="2"
+                                 Fill="#2E8E00"
+                                 Opacity="0.9"
                                  Type="ChartSeriesType.Line"></ChartSeries>
                     <ChartSeries DataSource="@environmentStatuses"
                                  Name="Humidity"
                                  XName="MeasuredAt"
                                  YName="Humidity"
                                  YAxisName="HumidityAxis"
+                                 Width="3"
+                                 ZOrder="1"
+                                 Fill="#0000ff"
+                                 Opacity="0.9"
                                  Type="ChartSeriesType.Line"></ChartSeries>
                 </ChartSeriesCollection>
 
@@ -161,8 +178,12 @@
 
     private const double MinTemperature = 15;
     private const double MaxTemperature = 35;
+    private const double IdealTemperature = 21;
     private const double MinHumidity = 30;
     private const double MaxHumidity = 70;
+    private const double IdealHumidity = 50;
+    private string IdealTemperaturePercentage => (int)((IdealTemperature - MinTemperature) / (MaxTemperature - MinTemperature) * 100) + "%";
+    private string IdealHumidityPercentage => (int)((IdealHumidity - MinHumidity) / (MaxHumidity - MinHumidity) * 100) + "%";
 
     private bool isLoading = true;
     private bool sfIsInitialized = false;
