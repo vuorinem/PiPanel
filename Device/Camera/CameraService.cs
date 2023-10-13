@@ -3,6 +3,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Transport;
+using PiPanel.Shared;
 using PiPanel.Shared.Camera;
 
 namespace PiPanel.Device.Camera;
@@ -12,10 +13,12 @@ public class CameraService
     private const string CameraImageTmpFilePath = "tmp/cameraimage.jpg";
 
     private readonly DeviceClient deviceClient;
+    private readonly DeviceProperties deviceProperties;
 
-    public CameraService(DeviceClient deviceClient)
+    public CameraService(DeviceClient deviceClient, DeviceProperties deviceProperties)
     {
         this.deviceClient = deviceClient;
+        this.deviceProperties = deviceProperties;
     }
 
     public async void ExecuteAsync(object? state)
@@ -25,7 +28,7 @@ public class CameraService
 
     private async Task CaptureCameraImagesAsync()
     {
-        foreach (var camera in CameraList.Cameras)
+        foreach (var camera in deviceProperties.Cameras)
         {
             try
             {

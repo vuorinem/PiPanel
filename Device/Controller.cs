@@ -38,7 +38,7 @@ public class Controller
         // Initialize with default properties
         deviceProperties = new DeviceProperties
         {
-            Cameras = CameraList.Cameras,
+            Cameras = CameraList.DefaultCameras,
             CameraInterval = DefaultCameraInterval,
             EnvironmentInterval = DefaultEnvironmentInterval,
         };
@@ -54,7 +54,7 @@ public class Controller
 
         await ReportCurrentPropertiesAsync();
 
-        var cameraService = new CameraService(deviceClient);
+        var cameraService = new CameraService(deviceClient, deviceProperties);
         cameraTimer = new Timer(cameraService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.CameraInterval);
 
         var environmentService = new EnvironmentService(deviceClient);
@@ -169,6 +169,26 @@ public class Controller
                     }
                     break;
 
+                case nameof(DeviceProperties.Cameras):
+                    if (TryGetValueFromProperty<IList<CameraInfo>>(property.Value, out var cameras))
+                    {
+                        if (cameras is null)
+                        {
+                            Console.Error.WriteLine("Desired device properties has invalid null value for cameras");
+                            break;
+                        }
+
+                        deviceProperties.Cameras = cameras;
+                        reportedProperties[nameof(DeviceProperties.Cameras)] = property.Value;
+
+                        Console.WriteLine("Environment interval set to {0}", deviceProperties.EnvironmentInterval);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse camera info from value {0}", property.Value);
+                    }
+                    break;
+
                 default:
                     Console.WriteLine("Unknown device property {0}: {1}", property.Key, property.Value);
                     break;
@@ -180,9 +200,9 @@ public class Controller
 
     private bool TryGetValueFromProperty<T>(object propertyValue, out T? value)
     {
-        if (propertyValue is JValue jsonValue)
+        if (propertyValue is JToken jsonToken)
         {
-            value = jsonValue.ToObject<T>();
+            value = jsonToken.ToObject<T>();
             return true;
         }
         else

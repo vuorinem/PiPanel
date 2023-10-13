@@ -13,11 +13,24 @@
     <h1>Camera Captures</h1>
 
     <div class="row">
-        @foreach (var camera in CameraList.Cameras)
+        @if (deviceProperties is not null)
         {
-            <div class="col">
-                <CameraCaptures Camera="camera"></CameraCaptures>
-            </div>
+            foreach (var camera in deviceProperties.Cameras)
+            {
+                <div class="col">
+                    <CameraCaptures Camera="camera"></CameraCaptures>
+                </div>
+            }
+
         }
     </div>
 </div>
+
+@code {
+    private DeviceProperties? deviceProperties;
+
+    protected override async Task OnInitializedAsync()
+    {
+        deviceProperties = await Http.GetFromJsonAsync<DeviceProperties>("Device/Properties");
+    }
+}

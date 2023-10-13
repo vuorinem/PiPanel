@@ -1,8 +1,10 @@
-﻿namespace PiPanel.Shared.Camera;
+using PiPanel.Shared.Camera;
+
+namespace PiPanel.Device.Camera;
 
 public static class CameraList
 {
-    public static readonly IList<CameraInfo> Cameras = new CameraInfo[]
+    public static readonly IList<CameraInfo> DefaultCameras = new CameraInfo[]
     {
         new() {
             Label = "PiCam",
