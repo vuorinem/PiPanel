@@ -10,13 +10,13 @@ Current functionality includes:
 
 - Camera images
 - Temperature and humidity tracking
+- Remote-controller servo linked to camera angle
 
 The functionality is likely to be expanded to include things that are useful,
 interesting to build or just fun challenges. Some of the future ideas include:
 
 - Use a display on the Pi to show temperature/humidity locally
 - Add LED indicators on Pi for connectivity / picture timings
-- Servos to remotely control camera angles
 - Direct access to video feed from camera
 
 ## Architecture
