@@ -32,8 +32,8 @@ public class CameraService
         {
             try
             {
-                await CameraCapture.CaptureImageAsync(camera, CameraImageTmpFilePath);
-                await UploadCaptureImage(camera.Label);
+                await CameraCapture.CaptureImageAsync(camera.Value, CameraImageTmpFilePath);
+                await UploadCaptureImage(camera.Key);
             }
             catch (CameraException ex)
             {
@@ -48,10 +48,10 @@ public class CameraService
         }
     }
 
-    private async Task UploadCaptureImage(string label)
+    private async Task UploadCaptureImage(string cameraKey)
     {
         var fileTime = File.GetCreationTime(CameraImageTmpFilePath);
-        var blobName = CapturedImageNaming.GetBlobNameForDevice(label, fileTime);
+        var blobName = CapturedImageNaming.GetBlobNameForDevice(cameraKey, fileTime);
 
         Console.WriteLine("Uploading capture image: {0}", blobName);
 

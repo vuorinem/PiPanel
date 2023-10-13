@@ -4,7 +4,7 @@ namespace PiPanel.Shared;
 
 public class DeviceProperties
 {
-    public IList<CameraInfo> Cameras { get; set; } = default!;
+    public IDictionary<string, CameraInfo> Cameras { get; set; } = default!;
 
     public TimeSpan CameraInterval { get; set; }
 

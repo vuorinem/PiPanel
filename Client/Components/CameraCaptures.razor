@@ -6,8 +6,11 @@
 <h2>@Camera.Label</h2>
 
 <p>
-    <b>Day:</b> @selectedDate.ToShortDateString() (@(images?.Count ?? 0) images)<br />
+    <b>Day:</b> @selectedDate.ToShortDateString() (@(images?.Count ?? 0) images)
+    <br />
     <b>Time:</b> @selectedImage?.CreatedAt.ToShortTimeString()
+    <br />
+    <button class="btn btn-secondary" @onclick="RefreshImages">Refresh</button>
 </p>
 
 <div class="justify-content-center">
@@ -32,6 +35,10 @@
 
     [Parameter]
     [EditorRequired]
+    public string CameraKey { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
     public CameraInfo Camera { get; set; } = default!;
 
     private DateOnly selectedDate = DateOnly.FromDateTime(DateTime.Today);
@@ -51,7 +58,7 @@
 
     protected async Task RefreshImages()
     {
-        images = await Http.GetFromJsonAsync<List<CapturedImage>>($"CameraCapture?cameraLabel={Camera.Label}&date={selectedDate.ToString(CapturedImageNaming.DatePathFormat)}");
+        images = await Http.GetFromJsonAsync<List<CapturedImage>>($"CameraCapture?cameraKey={CameraKey}&date={selectedDate.ToString(CapturedImageNaming.DatePathFormat)}");
     }
 
     protected async Task ChangeDate(int daysChanged)

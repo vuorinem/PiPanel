@@ -170,7 +170,7 @@ public class Controller
                     break;
 
                 case nameof(DeviceProperties.Cameras):
-                    if (TryGetValueFromProperty<IList<CameraInfo>>(property.Value, out var cameras))
+                    if (TryGetValueFromProperty<IDictionary<string, CameraInfo?>>(property.Value, out var cameras))
                     {
                         if (cameras is null)
                         {
@@ -178,10 +178,29 @@ public class Controller
                             break;
                         }
 
-                        deviceProperties.Cameras = cameras;
-                        reportedProperties[nameof(DeviceProperties.Cameras)] = property.Value;
+                        foreach (var cameraItem in cameras)
+                        {
+                            if (cameraItem.Value is not null)
+                            {
+                                if (deviceProperties.Cameras.ContainsKey(cameraItem.Key))
+                                {
+                                    Console.WriteLine("Updating Camera {0}", cameraItem.Key);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Adding new Camera {0}", cameraItem.Key);
+                                }
 
-                        Console.WriteLine("Environment interval set to {0}", deviceProperties.EnvironmentInterval);
+                                deviceProperties.Cameras[cameraItem.Key] = cameraItem.Value;
+                            }
+                            else if (deviceProperties.Cameras.ContainsKey(cameraItem.Key))
+                            {
+                                Console.WriteLine("Update / Add camera {0}", cameraItem.Key);
+                                deviceProperties.Cameras.Remove(cameraItem.Key);
+                            }
+                        }
+
+                        reportedProperties[nameof(DeviceProperties.Cameras)] = deviceProperties.Cameras;
                     }
                     else
                     {
@@ -216,8 +235,9 @@ public class Controller
     {
         var reportedProperties = new TwinCollection();
 
-        reportedProperties[nameof(deviceProperties.CameraInterval)] = deviceProperties.CameraInterval;
-        reportedProperties[nameof(deviceProperties.EnvironmentInterval)] = deviceProperties.EnvironmentInterval;
+        reportedProperties[nameof(DeviceProperties.CameraInterval)] = deviceProperties.CameraInterval;
+        reportedProperties[nameof(DeviceProperties.EnvironmentInterval)] = deviceProperties.EnvironmentInterval;
+        reportedProperties[nameof(DeviceProperties.Cameras)] = deviceProperties.Cameras;
 
         await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }

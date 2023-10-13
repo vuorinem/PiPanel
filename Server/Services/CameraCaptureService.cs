@@ -26,9 +26,9 @@ public class CameraCaptureService
         containerClient = new BlobContainerClient(storgeOptions.CaptureContainerUri, new DefaultAzureCredential());
     }
 
-    public async Task<IEnumerable<CapturedImage>> GetCameraCaptures(DateOnly date, string label)
+    public async Task<IEnumerable<CapturedImage>> GetCameraCaptures(DateOnly date, string cameraKey)
     {
-        var blobPrefix = CapturedImageNaming.GetBlobPrefixForDate(iotOptions.DeviceName, label, date);
+        var blobPrefix = CapturedImageNaming.GetBlobPrefixForDate(iotOptions.DeviceName, cameraKey, date);
         var blobList = containerClient.GetBlobsAsync(prefix: blobPrefix);
 
         var images = new List<CapturedImage>();

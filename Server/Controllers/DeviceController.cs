@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
 using PiPanel.Server.Services;
 using PiPanel.Shared;
+using PiPanel.Shared.Camera;
 
 namespace PiPanel.Server.Controllers;
 
@@ -39,6 +40,14 @@ public class DeviceController : ControllerBase
     public async Task<ActionResult> SetDeviceProperty(DeviceIntervalUpdateRequest request)
     {
         await iotHubService.SetDeviceProperty(request.Key, TimeSpan.FromSeconds(request.ValueInSeconds));
+
+        return NoContent();
+    }
+
+    [HttpPost("Cameras/{cameraKey}")]
+    public async Task<ActionResult> SetCamera(string cameraKey, CameraInfo camera)
+    {
+        await iotHubService.SetDeviceCamera(cameraKey, camera);
 
         return NoContent();
     }

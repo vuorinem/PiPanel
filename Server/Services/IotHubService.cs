@@ -3,6 +3,7 @@ using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Options;
 using PiPanel.Server.Options;
 using PiPanel.Shared;
+using PiPanel.Shared.Camera;
 using System.Text.Json;
 
 namespace PiPanel.Server.Services;
@@ -44,6 +45,14 @@ public class IotHubService
 
         return JsonSerializer.Deserialize<DeviceProperties>(reportedPropertiesJson)
             ?? throw new ApplicationException("Unable to deserialize reported device properties");
+    }
+
+    public async Task SetDeviceCamera(string cameraKey, CameraInfo camera)
+    {
+        var desiredCameraProperties = new TwinCollection();
+        desiredCameraProperties[cameraKey] = new TwinCollection(JsonSerializer.Serialize(camera));
+
+        await SetDeviceProperty(nameof(DeviceProperties.Cameras), desiredCameraProperties);
     }
 
     public async Task SetDeviceProperty(string key, object value)

@@ -15,10 +15,10 @@
     <div class="row">
         @if (deviceProperties is not null)
         {
-            foreach (var camera in deviceProperties.Cameras)
+            foreach (var cameraItem in deviceProperties.Cameras)
             {
                 <div class="col">
-                    <CameraCaptures Camera="camera"></CameraCaptures>
+                    <CameraCaptures CameraKey="@cameraItem.Key" Camera="cameraItem.Value"></CameraCaptures>
                 </div>
             }
 

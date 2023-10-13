@@ -25,9 +25,9 @@ public class CameraCaptureController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<CapturedImage>> GetAsync(string date, string cameraLabel)
+    public async Task<IEnumerable<CapturedImage>> GetAsync(string date, string cameraKey)
     {
-        return await cameraCaptureService.GetCameraCaptures(DateOnly.ParseExact(date, CapturedImageNaming.DatePathFormat), cameraLabel);
+        return await cameraCaptureService.GetCameraCaptures(DateOnly.ParseExact(date, CapturedImageNaming.DatePathFormat), cameraKey);
     }
 
     [HttpGet("Image")]

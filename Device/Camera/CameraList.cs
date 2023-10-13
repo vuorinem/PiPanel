@@ -4,20 +4,26 @@ namespace PiPanel.Device.Camera;
 
 public static class CameraList
 {
-    public static readonly IList<CameraInfo> DefaultCameras = new CameraInfo[]
+    public static readonly IDictionary<string, CameraInfo> DefaultCameras = new Dictionary<string, CameraInfo>
     {
-        new() {
-            Label = "PiCam",
-            Source = "/dev/video0",
-            ResolutionWidth = 640,
-            ResolutionHeight = 480,
-            IsFlippedVertically = true,
+        {
+            "PiCam",
+            new() {
+                Label = "PiCam",
+                Source = "/dev/video0",
+                ResolutionWidth = 640,
+                ResolutionHeight = 480,
+                IsFlippedVertically = true,
+            }
         },
-        new() {
-            Label = "WebCam",
-            Source = "/dev/video1",
-            ResolutionWidth = 640,
-            ResolutionHeight = 480,
+        {
+            "WebCam",
+            new() {
+                Label = "WebCam",
+                Source = "/dev/video1",
+                ResolutionWidth = 640,
+                ResolutionHeight = 480,
+            }
         },
     };
 }

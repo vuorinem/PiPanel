@@ -43,14 +43,45 @@
             </div>
         </div>
         <div class="col">
-            <label for="environmentIntevalInput" class="form-label">Set environment sensor report interval</label>
+            <label for="environmentIntervalInput" class="form-label">Set environment sensor report interval</label>
             <div class="input-group">
-                <input type="number" class="form-control align-content-end" id="environmentIntevalInput" @bind-value=newEnvironmentIntervalSeconds />
+                <input type="number" class="form-control align-content-end" id="environmentIntervalInput" @bind-value=newEnvironmentIntervalSeconds />
                 <span class="input-group-text">seconds</span>
                 <button class="btn btn-primary" @onclick="SaveEnvironmentInterval">Save &amp; Capture Now</button>
             </div>
         </div>
     </div>
+
+    @if (deviceProperties is not null)
+    {
+        <div class="row mt-3">
+            @foreach (var cameraItem in deviceProperties.Cameras)
+            {
+                <div class="col">
+                    <h3>Camera @cameraItem.Key</h3>
+                    <div class="mb-3">
+                        <label class="form-label">Resolution</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" @bind-value=cameraItem.Value.ResolutionWidth />
+                            <span class="input-group-text">X</span>
+                            <input type="number" class="form-control" @bind-value=cameraItem.Value.ResolutionHeight />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Flip Horizontally</label>
+                        <input type="checkbox" class="form-check" @bind=cameraItem.Value.IsFlippedHorizontally />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Flip Vertically</label>
+                        <input type="checkbox" class="form-check" @bind=cameraItem.Value.IsFlippedVertically />
+                    </div>
+                    <dov class="mb-3">
+                        <button class="btn btn-primary" @onclick="() => SaveCamera(cameraItem)">Save Camera Config</button>
+                    </dov>
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
@@ -85,6 +116,11 @@
     protected async Task SaveEnvironmentInterval()
     {
         await SaveInterval(nameof(deviceProperties.EnvironmentInterval), newEnvironmentIntervalSeconds);
+    }
+
+    protected async Task SaveCamera(KeyValuePair<string, CameraInfo> cameraItem)
+    {
+        await Http.PostAsJsonAsync($"Device/Cameras/{cameraItem.Key}", cameraItem.Value);
     }
 
     private async Task<DeviceProperties?> GetDevicePropertiesAsync()
