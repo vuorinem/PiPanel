@@ -9,4 +9,8 @@ public class CameraInfo
     public short ResolutionWidth { get; set; }
 
     public short ResolutionHeight { get; set; }
+
+    public bool IsFlippedHorizontally { get; set; }
+
+    public bool IsFlippedVertically { get; set; }
 }

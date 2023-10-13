@@ -18,11 +18,13 @@ public static class CameraCapture
 
         try
         {
-
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "fswebcam",
-                Arguments = $"-r {camera.ResolutionWidth}x{camera.ResolutionHeight} {filePath} -d {camera.Source}",
+                Arguments = $"-r {camera.ResolutionWidth}x{camera.ResolutionHeight}"
+                    + (camera.IsFlippedHorizontally ? " --flip h" : "")
+                    + (camera.IsFlippedVertically ? " --flip v" : "")
+                    + $" {filePath} -d {camera.Source}",
             });
 
             if (process is null)

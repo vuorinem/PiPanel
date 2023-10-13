@@ -9,6 +9,7 @@ public static class CameraList
             Source = "/dev/video0",
             ResolutionWidth = 640,
             ResolutionHeight = 480,
+            IsFlippedVertically = true,
         },
         new() {
             Label = "WebCam",
