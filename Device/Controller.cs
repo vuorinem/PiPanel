@@ -5,6 +5,7 @@ using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json.Linq;
 using PiPanel.Device.Camera;
 using PiPanel.Device.Environment;
+using PiPanel.Device.Servo;
 using PiPanel.Shared;
 using PiPanel.Shared.Camera;
 
@@ -59,6 +60,9 @@ public class Controller
         var environmentService = new EnvironmentService(deviceClient);
         environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.EnvironmentInterval);
 
+        //var servoService = new ServoService(deviceClient);
+        //var servoTimer = new Timer(servoService.ExecuteAsync, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
         Console.WriteLine("Starting controller");
 
         while (isRunning)
@@ -85,6 +89,7 @@ public class Controller
 
         await cameraTimer.DisposeAsync();
         await environmentTimer.DisposeAsync();
+        //await servoTimer.DisposeAsync();
 
         Console.WriteLine("Controller stopped");
     }
