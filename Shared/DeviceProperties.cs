@@ -9,4 +9,6 @@ public class DeviceProperties
     public TimeSpan CameraInterval { get; set; }
 
     public TimeSpan EnvironmentInterval { get; set; }
+
+    public short Angle { get; set; }
 }

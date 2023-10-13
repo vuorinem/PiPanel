@@ -44,6 +44,14 @@ public class DeviceController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("Angle")]
+    public async Task<ActionResult> SetDeviceProperty([FromBody] short angle)
+    {
+        await iotHubService.SetDeviceProperty(nameof(DeviceProperties.Angle), angle);
+
+        return NoContent();
+    }
+
     [HttpPost("Cameras/{cameraKey}")]
     public async Task<ActionResult> SetCamera(string cameraKey, CameraInfo camera)
     {

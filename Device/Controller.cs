@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
@@ -23,6 +22,8 @@ public class Controller
 
     private readonly TimeSpan DefaultEnvironmentInterval = TimeSpan.FromMinutes(5);
 
+    private const short DefaultAngle = 90;
+
     private bool isRunning = false;
 
     private CancellationTokenSource? controllerSleepTokenSource;
@@ -30,6 +31,8 @@ public class Controller
     private Timer? cameraTimer;
 
     private Timer? environmentTimer;
+
+    private ServoService? servoService;
 
     public Controller(DeviceClient deviceClient)
     {
@@ -41,6 +44,7 @@ public class Controller
             Cameras = CameraList.DefaultCameras,
             CameraInterval = DefaultCameraInterval,
             EnvironmentInterval = DefaultEnvironmentInterval,
+            Angle = DefaultAngle,
         };
     }
 
@@ -60,8 +64,8 @@ public class Controller
         var environmentService = new EnvironmentService(deviceClient);
         environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.EnvironmentInterval);
 
-        //var servoService = new ServoService(deviceClient);
-        //var servoTimer = new Timer(servoService.ExecuteAsync, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        servoService = new ServoService(deviceClient);
+        servoService.SetAngle(deviceProperties.Angle);
 
         Console.WriteLine("Starting controller");
 
@@ -89,7 +93,7 @@ public class Controller
 
         await cameraTimer.DisposeAsync();
         await environmentTimer.DisposeAsync();
-        //await servoTimer.DisposeAsync();
+        servoService.Dispose();
 
         Console.WriteLine("Controller stopped");
     }
@@ -169,6 +173,23 @@ public class Controller
                     }
                     break;
 
+                case nameof(DeviceProperties.Angle):
+                    if (TryGetValueFromProperty<short>(property.Value, out var desiredAngle))
+                    {
+                        deviceProperties.Angle = desiredAngle;
+                        
+                        servoService?.SetAngle(deviceProperties.Angle);
+
+                        reportedProperties[nameof(DeviceProperties.Angle)] = desiredAngle;
+
+                        Console.WriteLine("Angle set to {0}", deviceProperties.Angle);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse angle from value {0}", property.Value);
+                    }
+                    break;
+
                 case nameof(DeviceProperties.Cameras):
                     if (TryGetValueFromProperty<IDictionary<string, CameraInfo?>>(property.Value, out var cameras))
                     {
@@ -238,6 +259,7 @@ public class Controller
         reportedProperties[nameof(DeviceProperties.CameraInterval)] = deviceProperties.CameraInterval;
         reportedProperties[nameof(DeviceProperties.EnvironmentInterval)] = deviceProperties.EnvironmentInterval;
         reportedProperties[nameof(DeviceProperties.Cameras)] = deviceProperties.Cameras;
+        reportedProperties[nameof(DeviceProperties.Angle)] = deviceProperties.Angle;
 
         await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }

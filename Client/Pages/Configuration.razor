@@ -33,7 +33,7 @@
         <p>Error retrieving device properties</p>
     }
 
-    <div class="row">
+    <div class="row mb-3">
         <div class="col">
             <label for="cameraIntervalInput" class="form-label">Set camera interval</label>
             <div class="input-group">
@@ -54,7 +54,18 @@
 
     @if (deviceProperties is not null)
     {
-        <div class="row mt-3">
+        <div class="row mb-3">
+            <div class="col-3">
+                <label class="form-label">Camera Angle</label>
+                <div class="input-group">
+                    <input type="number" class="form-control align-content-end" @bind-value=@deviceProperties.Angle />
+                    <span class="input-group-text">°</span>
+                    <button class="btn btn-primary" @onclick="SaveAngle">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
             @foreach (var cameraItem in deviceProperties.Cameras)
             {
                 <div class="col">
@@ -146,5 +157,13 @@
             };
 
         await Http.PostAsJsonAsync($"Device/Interval", request);
+    }
+
+    private async Task SaveAngle()
+    {
+        if (deviceProperties is not null)
+        {
+            await Http.PostAsJsonAsync($"Device/Angle", deviceProperties.Angle);
+        }
     }
 }
