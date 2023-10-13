@@ -1,17 +1,21 @@
 using System.Device.Pwm;
 using Iot.Device.ServoMotor;
 
-namespace PiPanel.Device.Environment;
+namespace PiPanel.Device.Servo;
 
 public class ServoController : IDisposable
 {
     private ServoMotor motor;
 
-    public ServoController()
+    public ServoController(ServoInfo servo)
     {
         Console.WriteLine("Setting up servo control channel");
 
-        motor = new ServoMotor(PwmChannel.Create(0, 0, 50), 180, 1000, 2000);
+        motor = new ServoMotor(
+            PwmChannel.Create(0, 0, servo.Frequency),
+            servo.MaximumAngle,
+            servo.MinimumPulseWidthMilliseconds,
+            servo.MaximumPulseWidthMilliseconds);
     }
 
     public void Start()
