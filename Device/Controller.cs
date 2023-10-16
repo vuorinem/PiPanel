@@ -3,6 +3,7 @@ using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json.Linq;
 using PiPanel.Device.Camera;
+using PiPanel.Device.Display;
 using PiPanel.Device.Environment;
 using PiPanel.Device.Servo;
 using PiPanel.Shared;
@@ -67,6 +68,9 @@ public class Controller
         servoService = new ServoService(deviceClient);
         servoService.SetAngle(deviceProperties.Angle);
 
+        var display = new DisplayController();
+        _ = Task.Run(() => RunBackgroundDisplay(display, environmentService));
+
         Console.WriteLine("Starting controller");
 
         while (isRunning)
@@ -81,6 +85,7 @@ public class Controller
             }
             catch (TaskCanceledException)
             {
+                isRunning = false;
                 break;
             }
             finally
@@ -102,6 +107,57 @@ public class Controller
     {
         isRunning = false;
         controllerSleepTokenSource?.Cancel();
+    }
+
+    private async Task RunBackgroundDisplay(DisplayController display, EnvironmentService environmentService)
+    {
+        try
+        {
+            Animations.Animate(display, Animations.Countdown);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Exception in RunBackgroundDisplay task: {ex.Message}");
+        }
+
+        var displayContent = 0;
+
+        while (isRunning)
+        {
+            try
+            {
+                if (display.IsShowing)
+                {
+                    await Task.Delay(1000);
+                    continue;
+                }
+                else if (displayContent == 0 && environmentService.LatestTemperature is not null)
+                {
+                    var bytes = display.GetDisplayBytes(environmentService.LatestTemperature.Value, 'C');
+                    display.RunFor(bytes, TimeSpan.FromSeconds(5));
+
+                    displayContent = (displayContent + 1) % 3;
+                }
+                else if (displayContent == 1 && environmentService.LatestHumidity is not null)
+                {
+                    var bytes = display.GetDisplayBytes(environmentService.LatestHumidity.Value, 'C');
+                    display.RunFor(bytes, TimeSpan.FromSeconds(5));
+
+                    displayContent = (displayContent + 1) % 3;
+                }
+                else
+                {
+                    var bytes = display.GetDisplayBytes(DateTime.Now.ToString("HH.mm"));
+                    display.RunFor(bytes, TimeSpan.FromSeconds(5));
+
+                    displayContent = (displayContent + 1) % 3;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Exception in RunBackgroundDisplay task: {ex.Message}");
+            }
+        }
     }
 
     private async Task OnDesiredPropertyChangedAsync(TwinCollection desiredProperties, object userContext)
@@ -177,7 +233,7 @@ public class Controller
                     if (TryGetValueFromProperty<short>(property.Value, out var desiredAngle))
                     {
                         deviceProperties.Angle = desiredAngle;
-                        
+
                         servoService?.SetAngle(deviceProperties.Angle);
 
                         reportedProperties[nameof(DeviceProperties.Angle)] = desiredAngle;

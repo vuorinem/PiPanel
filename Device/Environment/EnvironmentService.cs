@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
-using Azure;
 using Microsoft.Azure.Devices.Client;
 using PiPanel.Shared.Environment;
 
@@ -9,8 +8,14 @@ namespace PiPanel.Device.Environment;
 
 public class EnvironmentService
 {
-    private TemperatureHumiditySensor sensor;
+    public double? LatestTemperature => latestTemperatureInternal;
+    public double? LatestHumidity => latestHumidityInternal;
+
+    private readonly TemperatureHumiditySensor sensor;
     private readonly DeviceClient deviceClient;
+
+    private double? latestTemperatureInternal;
+    private double? latestHumidityInternal;
 
     public EnvironmentService(DeviceClient deviceClient)
     {
@@ -61,6 +66,16 @@ public class EnvironmentService
         {
             var temperature = sensor.GetTemperature();
             var humidity = sensor.GetHumidity();
+
+            if (temperature is not null)
+            {
+                latestTemperatureInternal = temperature;
+            }
+
+            if (humidity is not null)
+            {
+                latestHumidityInternal = humidity;
+            }
 
             if (temperature is null && humidity is null)
             {
