@@ -11,11 +11,11 @@ Current functionality includes:
 - Camera images
 - Temperature and humidity tracking
 - Remote-controller servo linked to camera angle
+- 4x7-segment display showing temperature/humidity/time locally
 
 The functionality is likely to be expanded to include things that are useful,
 interesting to build or just fun challenges. Some of the future ideas include:
 
-- Use a display on the Pi to show temperature/humidity locally
 - Add LED indicators on Pi for connectivity / picture timings
 - Direct access to video feed from camera
 
@@ -23,7 +23,7 @@ interesting to build or just fun challenges. Some of the future ideas include:
 
 The system consists of following parts:
 
-- A Raspberry Pi with attached cameras and sensors
+- A Raspberry Pi with attached cameras, sensors and display
 - Device application built for Raspberry Pi with .NET
 - Azure IoT Hub where the device is registered and managed
 - Azure Blob Storage where the data is persisted
