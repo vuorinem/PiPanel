@@ -25,6 +25,8 @@ public class Controller
 
     private const short DefaultAngle = 90;
 
+    private const short DefaultCameraTimerSeconds = 5;
+
     private bool isRunning = false;
 
     private CancellationTokenSource? controllerSleepTokenSource;
@@ -46,6 +48,7 @@ public class Controller
             CameraInterval = DefaultCameraInterval,
             EnvironmentInterval = DefaultEnvironmentInterval,
             Angle = DefaultAngle,
+            CameraTimerSeconds = DefaultCameraTimerSeconds,
         };
     }
 
@@ -59,9 +62,6 @@ public class Controller
 
         await ReportCurrentPropertiesAsync();
 
-        var cameraService = new CameraService(deviceClient, deviceProperties);
-        cameraTimer = new Timer(cameraService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.CameraInterval);
-
         var environmentService = new EnvironmentService(deviceClient);
         environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.EnvironmentInterval);
 
@@ -70,6 +70,19 @@ public class Controller
 
         var display = new DisplayController();
         _ = Task.Run(() => RunBackgroundDisplay(display, environmentService));
+
+        var cameraService = new CameraService(deviceClient, deviceProperties);
+        cameraTimer = new Timer(
+            async (object? state) =>
+            {
+                if (deviceProperties.CameraTimerSeconds > 0)
+                {
+                    Animations.AnimateCountdown(display, deviceProperties.CameraTimerSeconds);
+                }
+
+                await cameraService.ExecuteAsync(state);
+            },
+            null, TimeSpan.Zero, deviceProperties.CameraInterval);
 
         Console.WriteLine("Starting controller");
 
@@ -111,15 +124,6 @@ public class Controller
 
     private async Task RunBackgroundDisplay(DisplayController display, EnvironmentService environmentService)
     {
-        try
-        {
-            Animations.Animate(display, Animations.Countdown);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Exception in RunBackgroundDisplay task: {ex.Message}");
-        }
-
         var displayContent = 0;
 
         while (isRunning)
@@ -140,7 +144,7 @@ public class Controller
                 }
                 else if (displayContent == 1 && environmentService.LatestHumidity is not null)
                 {
-                    var bytes = display.GetDisplayBytes(environmentService.LatestHumidity.Value, 'C');
+                    var bytes = display.GetDisplayBytes(environmentService.LatestHumidity.Value, 'H');
                     display.RunFor(bytes, TimeSpan.FromSeconds(5));
 
                     displayContent = (displayContent + 1) % 3;
@@ -246,6 +250,21 @@ public class Controller
                     }
                     break;
 
+                case nameof(DeviceProperties.CameraTimerSeconds):
+                    if (TryGetValueFromProperty<short>(property.Value, out var desiredCameraTimerSeconds))
+                    {
+                        deviceProperties.CameraTimerSeconds = desiredCameraTimerSeconds;
+
+                        reportedProperties[nameof(DeviceProperties.CameraTimerSeconds)] = desiredCameraTimerSeconds;
+
+                        Console.WriteLine("CameraTimerSeconds set to {0}", deviceProperties.CameraTimerSeconds);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse camera timer seconds from value {0}", property.Value);
+                    }
+                    break;
+
                 case nameof(DeviceProperties.Cameras):
                     if (TryGetValueFromProperty<IDictionary<string, CameraInfo?>>(property.Value, out var cameras))
                     {
@@ -316,6 +335,7 @@ public class Controller
         reportedProperties[nameof(DeviceProperties.EnvironmentInterval)] = deviceProperties.EnvironmentInterval;
         reportedProperties[nameof(DeviceProperties.Cameras)] = deviceProperties.Cameras;
         reportedProperties[nameof(DeviceProperties.Angle)] = deviceProperties.Angle;
+        reportedProperties[nameof(DeviceProperties.CameraTimerSeconds)] = deviceProperties.CameraTimerSeconds;
 
         await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }

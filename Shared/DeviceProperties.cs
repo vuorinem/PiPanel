@@ -1,4 +1,4 @@
-﻿using PiPanel.Shared.Camera;
+using PiPanel.Shared.Camera;
 
 namespace PiPanel.Shared;
 
@@ -11,4 +11,6 @@ public class DeviceProperties
     public TimeSpan EnvironmentInterval { get; set; }
 
     public short Angle { get; set; }
+
+    public short CameraTimerSeconds { get; set; }
 }

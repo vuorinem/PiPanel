@@ -21,6 +21,8 @@ public class DisplayController
 
     private CancellationTokenSource? displayCancellation;
 
+    private bool isInScene = false;
+
     public bool IsShowing => displayCancellation is not null;
 
     public DisplayController()
@@ -48,6 +50,28 @@ public class DisplayController
         }
     }
 
+    public bool StartScene()
+    {
+        if (isInScene)
+        {
+            return false;
+        }
+
+        isInScene = true;
+
+        return true;
+    }
+
+    public void StopScene()
+    {
+        if (!isInScene)
+        {
+            throw new ApplicationException("Trying to stop scene, but display is currently not in scene");
+        }
+
+        isInScene = false;
+    }
+
     public byte[] GetDisplayBytes(string text)
     {
         return Segments.GetDisplaysForText(text, displayPins.Length);
@@ -67,8 +91,13 @@ public class DisplayController
         }
     }
 
-    public void RunFor(byte[] segmentBytesPerDigit, TimeSpan runFor)
+    public void RunFor(byte[] segmentBytesPerDigit, TimeSpan runFor, bool isPartOfScene = false)
     {
+        if (isInScene && !isPartOfScene)
+        {
+            return;
+        }
+
         try
         {
             StopCurrentDisplay();
@@ -77,9 +106,9 @@ public class DisplayController
             {
                 var cancellationToken = displayCancellation.Token;
 
-                using var timer = new Timer((object? state) => displayCancellation.Cancel(), null, (int)runFor.TotalMilliseconds, Timeout.Infinite);
+                var stopAt = DateTime.Now + runFor;
 
-                while (!cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested && DateTime.Now < stopAt)
                 {
                     for (int displayIndex = 0; displayIndex < displayPins.Length; displayIndex++)
                     {

@@ -21,7 +21,7 @@ public class CameraService
         this.deviceProperties = deviceProperties;
     }
 
-    public async void ExecuteAsync(object? state)
+    public async Task ExecuteAsync(object? state)
     {
         await CaptureCameraImagesAsync();
     }
