@@ -4,9 +4,9 @@ public class ServoInfo
 {
     public int Frequency { get; set; }
 
-    public double MinimumPulseWidthMilliseconds { get; set; }
+    public short MinimumPulseWidthMilliseconds { get; set; }
 
-    public double MaximumPulseWidthMilliseconds { get; set; }
+    public short MaximumPulseWidthMilliseconds { get; set; }
 
-    public double MaximumAngle { get; set; }
+    public short MaximumAngle { get; set; }
 }

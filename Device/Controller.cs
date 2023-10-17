@@ -25,6 +25,8 @@ public class Controller
 
     private const short DefaultAngle = 90;
 
+    private const short DefaultAutoRotateAngle = 0;
+
     private const short DefaultCameraTimerSeconds = 5;
 
     private bool isRunning = false;
@@ -48,6 +50,7 @@ public class Controller
             CameraInterval = DefaultCameraInterval,
             EnvironmentInterval = DefaultEnvironmentInterval,
             Angle = DefaultAngle,
+            AutoRotateAngle = DefaultAutoRotateAngle,
             CameraTimerSeconds = DefaultCameraTimerSeconds,
         };
     }
@@ -81,6 +84,16 @@ public class Controller
                 }
 
                 await cameraService.ExecuteAsync(state);
+
+                if (deviceProperties.AutoRotateAngle > 0)
+                {
+                    deviceProperties.Angle = (short)
+                        ((deviceProperties.Angle + deviceProperties.AutoRotateAngle) % (ServoList.Servos[0].MaximumAngle + 1));
+
+                    servoService?.SetAngle(deviceProperties.Angle);
+
+                    await ReportCurrentPropertyAsync(nameof(DeviceProperties.Angle), deviceProperties.Angle);
+                }
             },
             null, TimeSpan.Zero, deviceProperties.CameraInterval);
 
@@ -250,6 +263,21 @@ public class Controller
                     }
                     break;
 
+                case nameof(DeviceProperties.AutoRotateAngle):
+                    if (TryGetValueFromProperty<short>(property.Value, out var desiredAutoRotateAngle))
+                    {
+                        deviceProperties.AutoRotateAngle = desiredAutoRotateAngle;
+
+                        reportedProperties[nameof(DeviceProperties.AutoRotateAngle)] = desiredAutoRotateAngle;
+
+                        Console.WriteLine("AutoRotateAngle set to {0}", deviceProperties.AutoRotateAngle);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse auto-rotate angle from value {0}", property.Value);
+                    }
+                    break;
+
                 case nameof(DeviceProperties.CameraTimerSeconds):
                     if (TryGetValueFromProperty<short>(property.Value, out var desiredCameraTimerSeconds))
                     {
@@ -335,7 +363,17 @@ public class Controller
         reportedProperties[nameof(DeviceProperties.EnvironmentInterval)] = deviceProperties.EnvironmentInterval;
         reportedProperties[nameof(DeviceProperties.Cameras)] = deviceProperties.Cameras;
         reportedProperties[nameof(DeviceProperties.Angle)] = deviceProperties.Angle;
+        reportedProperties[nameof(DeviceProperties.AutoRotateAngle)] = deviceProperties.AutoRotateAngle;
         reportedProperties[nameof(DeviceProperties.CameraTimerSeconds)] = deviceProperties.CameraTimerSeconds;
+
+        await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+    }
+
+    private async Task ReportCurrentPropertyAsync(string propertyName, dynamic propertyValue)
+    {
+        var reportedProperties = new TwinCollection();
+
+        reportedProperties[propertyName] = propertyValue;
 
         await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }
