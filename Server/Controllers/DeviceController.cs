@@ -44,10 +44,10 @@ public class DeviceController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("Angle")]
-    public async Task<ActionResult> SetDeviceProperty([FromBody] short angle)
+    [HttpPost("NumberProperty/{propertyName}")]
+    public async Task<ActionResult> SetDeviceProperty(string propertyName, [FromBody] short angle)
     {
-        await iotHubService.SetDeviceProperty(nameof(DeviceProperties.Angle), angle);
+        await iotHubService.SetDeviceProperty(propertyName, angle);
 
         return NoContent();
     }

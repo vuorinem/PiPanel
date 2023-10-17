@@ -34,7 +34,7 @@
     }
 
     <div class="row mb-3">
-        <div class="col">
+        <div class="col-sm-6">
             <label for="cameraIntervalInput" class="form-label">Set camera interval</label>
             <div class="input-group">
                 <input type="number" class="form-control align-content-end" id="cameraIntervalInput" @bind-value=newCameraIntervalSeconds />
@@ -42,7 +42,7 @@
                 <button class="btn btn-primary" @onclick="SaveCameraInterval">Save & Capture Now</button>
             </div>
         </div>
-        <div class="col">
+        <div class="col-sm-6">
             <label for="environmentIntervalInput" class="form-label">Set environment sensor report interval</label>
             <div class="input-group">
                 <input type="number" class="form-control align-content-end" id="environmentIntervalInput" @bind-value=newEnvironmentIntervalSeconds />
@@ -55,13 +55,31 @@
     @if (deviceProperties is not null)
     {
         <div class="row mb-3">
-            <div class="col-3">
+            <div class="col-sm-3">
                 <label class="form-label">Camera Angle</label>
                 <div class="input-group">
                     <input type="number" class="form-control align-content-end" @bind-value=@deviceProperties.Angle />
                     <span class="input-group-text">°</span>
-                    <button class="btn btn-primary" @onclick="SaveAngle">Save</button>
+                    <button class="btn btn-primary" @onclick="() => SaveNumberProperty(nameof(DeviceProperties.Angle), deviceProperties.Angle)">Save</button>
                 </div>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label">Auto-Rotate Angle</label>
+                <div class="input-group">
+                    <input type="number" class="form-control align-content-end" @bind-value=@deviceProperties.AutoRotateAngle />
+                    <span class="input-group-text">°</span>
+                    <button class="btn btn-primary" @onclick="() => SaveNumberProperty(nameof(DeviceProperties.AutoRotateAngle), deviceProperties.AutoRotateAngle)">Save</button>
+                </div>
+                <p class="form-text">Change camera angle after each capture. Set to zero to disable.</p>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label">Camera Timer</label>
+                <div class="input-group">
+                    <input type="number" class="form-control align-content-end" @bind-value=@deviceProperties.CameraTimerSeconds />
+                    <span class="input-group-text">°</span>
+                    <button class="btn btn-primary" @onclick="() => SaveNumberProperty(nameof(DeviceProperties.CameraTimerSeconds), deviceProperties.CameraTimerSeconds)">Save</button>
+                </div>
+                <p class="form-text">Show a countdown timer before capturing a camera image. Set to zero to disable.</p>
             </div>
         </div>
 
@@ -159,11 +177,11 @@
         await Http.PostAsJsonAsync($"Device/Interval", request);
     }
 
-    private async Task SaveAngle()
+    private async Task SaveNumberProperty(string propertyName, short value)
     {
         if (deviceProperties is not null)
         {
-            await Http.PostAsJsonAsync($"Device/Angle", deviceProperties.Angle);
+            await Http.PostAsJsonAsync($"Device/NumberProperty/{propertyName}", value);
         }
     }
 }
