@@ -21,9 +21,10 @@ public class DisplayController
 
     private CancellationTokenSource? displayCancellation;
 
-    private bool isInScene = false;
+    private int nextScene = 1;
+    private int? currentScene = null;
 
-    public bool IsShowing => displayCancellation is not null;
+    public bool IsShowing => displayCancellation is not null || currentScene is not null;
 
     public DisplayController()
     {
@@ -50,26 +51,26 @@ public class DisplayController
         }
     }
 
-    public bool StartScene()
+    public int? StartScene()
     {
-        if (isInScene)
+        if (currentScene is not null)
         {
-            return false;
+            return null;
         }
 
-        isInScene = true;
+        currentScene = nextScene++;
 
-        return true;
+        return currentScene;
     }
 
-    public void StopScene()
+    public void StopScene(int scene)
     {
-        if (!isInScene)
+        if (scene != currentScene)
         {
-            throw new ApplicationException("Trying to stop scene, but display is currently not in scene");
+            throw new ApplicationException($"Trying to stop scene {scene} but current scene is {currentScene}");
         }
 
-        isInScene = false;
+        currentScene = null;
     }
 
     public byte[] GetDisplayBytes(string text)
@@ -91,11 +92,23 @@ public class DisplayController
         }
     }
 
-    public void RunFor(byte[] segmentBytesPerDigit, TimeSpan runFor, bool isPartOfScene = false)
+    public Task RunForAsync(byte[] segmentBytesPerDigit, TimeSpan runFor, int? scene = null)
     {
-        if (isInScene && !isPartOfScene)
+        return Task.Run(() => RunFor(segmentBytesPerDigit, runFor, scene));
+    }
+
+    private void RunFor(byte[] segmentBytesPerDigit, TimeSpan runFor, int? scene = null)
+    {
+        if (currentScene is not null)
         {
-            return;
+            if (scene is null)
+            {
+                return;
+            }
+            else if (scene != currentScene)
+            {
+                throw new ApplicationException($"Trying to run display for scene {scene} but current scene is {currentScene}");
+            }
         }
 
         try

@@ -80,7 +80,7 @@ public class Controller
             {
                 if (deviceProperties.CameraTimerSeconds > 0)
                 {
-                    Animations.AnimateCountdown(display, deviceProperties.CameraTimerSeconds);
+                    await Animations.AnimateCountdownAsync(display, deviceProperties.CameraTimerSeconds);
                 }
 
                 await cameraService.ExecuteAsync(state);
@@ -146,26 +146,25 @@ public class Controller
                 if (display.IsShowing)
                 {
                     await Task.Delay(1000);
-                    continue;
                 }
                 else if (displayContent == 0 && environmentService.LatestTemperature is not null)
                 {
                     var bytes = display.GetDisplayBytes(environmentService.LatestTemperature.Value, 'C');
-                    display.RunFor(bytes, TimeSpan.FromSeconds(5));
+                    await display.RunForAsync(bytes, TimeSpan.FromSeconds(2));
 
                     displayContent = (displayContent + 1) % 3;
                 }
                 else if (displayContent == 1 && environmentService.LatestHumidity is not null)
                 {
                     var bytes = display.GetDisplayBytes(environmentService.LatestHumidity.Value, 'H');
-                    display.RunFor(bytes, TimeSpan.FromSeconds(5));
+                    await display.RunForAsync(bytes, TimeSpan.FromSeconds(2));
 
                     displayContent = (displayContent + 1) % 3;
                 }
                 else
                 {
                     var bytes = display.GetDisplayBytes(DateTime.Now.ToString("HH.mm"));
-                    display.RunFor(bytes, TimeSpan.FromSeconds(5));
+                    await display.RunForAsync(bytes, TimeSpan.FromSeconds(2));
 
                     displayContent = (displayContent + 1) % 3;
                 }

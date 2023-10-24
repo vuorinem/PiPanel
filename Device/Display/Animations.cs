@@ -4,7 +4,7 @@ public static class Animations
 {
     public record DisplayState(TimeSpan ShowFor, byte[] DisplayBytes);
 
-    public static void AnimateCountdown(DisplayController display, int seconds)
+    public static async Task AnimateCountdownAsync(DisplayController display, int seconds)
     {
         if (seconds > 9)
         {
@@ -76,25 +76,31 @@ public static class Animations
             })
         );
 
-        Animate(display, displayStates);
+        await AnimateAsync(display, displayStates);
     }
 
-    public static void Animate(DisplayController display, IEnumerable<DisplayState> animation)
+    public static async Task AnimateAsync(DisplayController display, IEnumerable<DisplayState> animation)
     {
-        if (!display.StartScene())
+        var scene = display.StartScene();
+        if (scene is null)
         {
             Console.Error.WriteLine("Could not start animation, display is currently in a scene");
+            return;
         }
 
-        Console.WriteLine("Starting animation scene");
-
-        foreach (var screen in animation)
+        try
         {
-            display.RunFor(screen.DisplayBytes, screen.ShowFor, true);
+            Console.WriteLine("Starting animation scene");
+
+            foreach (var screen in animation)
+            {
+                await display.RunForAsync(screen.DisplayBytes, screen.ShowFor, scene);
+            }
+
         }
-
-        display.StopScene();
-
-        Console.WriteLine("Animation scene completed");
+        finally
+        {
+            display.StopScene(scene.Value);
+        }
     }
 }
