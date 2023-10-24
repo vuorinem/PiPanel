@@ -6,6 +6,7 @@ using PiPanel.Device.Camera;
 using PiPanel.Device.Display;
 using PiPanel.Device.Environment;
 using PiPanel.Device.Servo;
+using PiPanel.Device.Weather;
 using PiPanel.Shared;
 using PiPanel.Shared.Camera;
 
@@ -38,6 +39,8 @@ public class Controller
     private Timer? environmentTimer;
 
     private ServoService? servoService;
+
+    private SemaphoreSlim weatherSemaphore = new(1, 1);
 
     public Controller(DeviceClient deviceClient)
     {
@@ -96,6 +99,16 @@ public class Controller
                 }
             },
             null, TimeSpan.Zero, deviceProperties.CameraInterval);
+
+        var weatherService = new WeatherService(deviceProperties);
+
+        var obstacleSensor = new ObstacleSensor(
+            async () =>
+            {
+                await DisplayWeather(display, weatherService);
+            },
+            () => { }
+        );
 
         Console.WriteLine("Starting controller");
 
@@ -173,6 +186,65 @@ public class Controller
             {
                 Console.Error.WriteLine($"Exception in RunBackgroundDisplay task: {ex.Message}");
             }
+        }
+    }
+
+    private async Task DisplayWeather(DisplayController display, WeatherService weatherService)
+    {
+        if (weatherSemaphore.CurrentCount == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            weatherSemaphore.Wait();
+
+            Console.WriteLine("Retrieving current weather");
+
+            var weather = await weatherService.GetCurrentWeather();
+
+            if (weather is null)
+            {
+                Console.Error.WriteLine("Unable to retrieve weather");
+                return;
+            }
+
+            var scene = display.StartScene();
+
+            if (scene is null)
+            {
+                // Something else is running a display scene, skip weather display
+                return;
+            }
+
+            try
+            {
+                var breakIndicatorBytes = new[] { Segments.Center, Segments.Center, Segments.Center, Segments.Center };
+
+                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(1), scene);
+                await display.RunForAsync(display.GetDisplayBytes(weather.Temperature, 'C'), TimeSpan.FromSeconds(3), scene);
+                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(0.5), scene);
+                await display.RunForAsync(display.GetDisplayBytes(weather.Rain, 'n'), TimeSpan.FromSeconds(3), scene);
+                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(0.5), scene);
+                await display.RunForAsync(display.GetDisplayBytes(weather.WindSpeed, 'S'), TimeSpan.FromSeconds(3), scene);
+                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(1), scene);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Exception in RunBackgroundDisplay task: {ex.Message}");
+            }
+            finally
+            {
+                if (scene is not null)
+                {
+                    display.StopScene(scene.Value);
+                }
+            }
+        }
+        finally
+        {
+            weatherSemaphore.Release();
         }
     }
 

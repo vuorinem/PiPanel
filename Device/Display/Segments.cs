@@ -28,6 +28,8 @@ public static class Segments
         '9' => (byte)(Top & RightTop & RightBottom & Bottom & LeftTop & Center),
         'C' => (byte)(Top & Bottom & LeftBottom & LeftTop),
         'H' => (byte)(RightTop & RightBottom & LeftBottom & LeftTop & Center),
+        'S' => (byte)(Top & LeftTop & Center & RightBottom & Bottom),
+        'n' => (byte)(LeftBottom & Center & RightBottom),
         '-' => Center,
         _ => Full,
     };
