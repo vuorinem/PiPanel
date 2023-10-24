@@ -222,13 +222,14 @@ public class Controller
             {
                 var breakIndicatorBytes = new[] { Segments.Center, Segments.Center, Segments.Center, Segments.Center };
 
-                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(1), scene);
+                await display.RunForAsync(display.GetDisplayBytes(" -- "), TimeSpan.FromSeconds(1), scene);
+                await display.RunForAsync(display.GetDisplayBytes("tenp"), TimeSpan.FromSeconds(1), scene);
                 await display.RunForAsync(display.GetDisplayBytes(weather.Temperature, 'C'), TimeSpan.FromSeconds(3), scene);
-                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(0.5), scene);
-                await display.RunForAsync(display.GetDisplayBytes(weather.Rain, 'n'), TimeSpan.FromSeconds(3), scene);
-                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(0.5), scene);
-                await display.RunForAsync(display.GetDisplayBytes(weather.WindSpeed, 'S'), TimeSpan.FromSeconds(3), scene);
-                await display.RunForAsync(breakIndicatorBytes, TimeSpan.FromSeconds(1), scene);
+                await display.RunForAsync(display.GetDisplayBytes("rain"), TimeSpan.FromSeconds(1), scene);
+                await display.RunForAsync(display.GetDisplayBytes(weather.Rain), TimeSpan.FromSeconds(3), scene);
+                await display.RunForAsync(display.GetDisplayBytes("uind"), TimeSpan.FromSeconds(1), scene);
+                await display.RunForAsync(display.GetDisplayBytes(weather.WindSpeed), TimeSpan.FromSeconds(3), scene);
+                await display.RunForAsync(display.GetDisplayBytes(" -- "), TimeSpan.FromSeconds(1), scene);
             }
             catch (Exception ex)
             {

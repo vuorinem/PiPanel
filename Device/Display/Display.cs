@@ -78,7 +78,7 @@ public class DisplayController
         return Segments.GetDisplaysForText(text, displayPins.Length);
     }
 
-    public byte[] GetDisplayBytes(double number, char? unitCharacter)
+    public byte[] GetDisplayBytes(double number, char? unitCharacter = null)
     {
         if (unitCharacter is not null)
         {
