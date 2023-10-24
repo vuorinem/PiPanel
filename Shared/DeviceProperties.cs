@@ -15,4 +15,6 @@ public class DeviceProperties
     public short AutoRotateAngle { get; set; }
 
     public short CameraTimerSeconds { get; set; }
+
+    public Location Location { get; set; } = default!;
 }

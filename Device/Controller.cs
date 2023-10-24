@@ -246,6 +246,26 @@ public class Controller
                     }
                     break;
 
+                case nameof(DeviceProperties.Location):
+                    if (TryGetValueFromProperty<Location>(property.Value, out var desiredLocation))
+                    {
+                        if (desiredLocation is null)
+                        {
+                            Console.Error.WriteLine("Desired device properties has invalid null value for location");
+                            break;
+                        }
+
+                        deviceProperties.Location = desiredLocation;
+                        reportedProperties[nameof(DeviceProperties.Location)] = property.Value;
+
+                        Console.WriteLine("Location set to {0}", deviceProperties.Location);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to parse Location from value {0}", property.Value);
+                    }
+                    break;
+
                 case nameof(DeviceProperties.Angle):
                     if (TryGetValueFromProperty<short>(property.Value, out var desiredAngle))
                     {
@@ -365,6 +385,7 @@ public class Controller
         reportedProperties[nameof(DeviceProperties.Angle)] = deviceProperties.Angle;
         reportedProperties[nameof(DeviceProperties.AutoRotateAngle)] = deviceProperties.AutoRotateAngle;
         reportedProperties[nameof(DeviceProperties.CameraTimerSeconds)] = deviceProperties.CameraTimerSeconds;
+        reportedProperties[nameof(DeviceProperties.Location)] = deviceProperties.Location;
 
         await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }
