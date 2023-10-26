@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Microsoft.Azure.Devices.Client;
 using PiPanel.Device;
 
 Console.WriteLine("* * * * *");
@@ -14,9 +13,8 @@ if (config is null)
 }
 
 Console.WriteLine("Connecting to hub");
-using var deviceClient = DeviceClient.CreateFromConnectionString(config.DeviceConnectionString);
 
-var controller = new Controller(deviceClient);
+using var controller = new Controller(config);
 
 // Add shutdown handler from keyboard
 Console.CancelKeyPress += (sender, eventArgs) =>
@@ -49,7 +47,6 @@ catch (Exception ex)
 }
 
 Console.WriteLine("Closing hub connection");
-await deviceClient.CloseAsync();
 
 Console.WriteLine("PiPanel shutdown complete");
 Console.WriteLine("* * * * *");

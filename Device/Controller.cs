@@ -12,7 +12,7 @@ using PiPanel.Shared.Camera;
 
 namespace PiPanel.Device;
 
-public class Controller
+public class Controller : IDisposable
 {
     private readonly DeviceClient deviceClient;
 
@@ -42,9 +42,11 @@ public class Controller
 
     private SemaphoreSlim weatherSemaphore = new(1, 1);
 
-    public Controller(DeviceClient deviceClient)
+    private bool disposedValue;
+
+    public Controller(PiPanelConfig config)
     {
-        this.deviceClient = deviceClient;
+        deviceClient = DeviceClient.CreateFromConnectionString(config.DeviceConnectionString);
 
         // Initialize with default properties
         deviceProperties = new DeviceProperties
@@ -469,5 +471,24 @@ public class Controller
         reportedProperties[propertyName] = propertyValue;
 
         await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                deviceClient.Dispose();
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
