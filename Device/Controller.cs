@@ -18,6 +18,8 @@ public class Controller : IDisposable
 
     private readonly DeviceProperties deviceProperties;
 
+    private readonly PiPanelConfig config;
+
     private readonly TimeSpan controllerSleepInterval = TimeSpan.FromMinutes(1);
 
     private readonly TimeSpan DefaultCameraInterval = TimeSpan.FromMinutes(20);
@@ -58,6 +60,8 @@ public class Controller : IDisposable
             AutoRotateAngle = DefaultAutoRotateAngle,
             CameraTimerSeconds = DefaultCameraTimerSeconds,
         };
+
+        this.config = config;
     }
 
     public async Task RunAsync()
@@ -102,7 +106,7 @@ public class Controller : IDisposable
             },
             null, TimeSpan.Zero, deviceProperties.CameraInterval);
 
-        var weatherService = new WeatherService(deviceProperties);
+        var weatherService = new WeatherService(deviceProperties, config.WeatherApiKey);
 
         var obstacleSensor = new ObstacleSensor(
             async () =>
@@ -226,11 +230,11 @@ public class Controller : IDisposable
 
                 await display.RunForAsync(display.GetDisplayBytes(" -- "), TimeSpan.FromSeconds(1), scene);
                 await display.RunForAsync(display.GetDisplayBytes("tenp"), TimeSpan.FromSeconds(1), scene);
-                await display.RunForAsync(display.GetDisplayBytes(weather.Temperature, 'C'), TimeSpan.FromSeconds(3), scene);
+                await DisplayNumberOrEmpty(display, scene.Value, weather.Temperature, 'C', TimeSpan.FromSeconds(3));
                 await display.RunForAsync(display.GetDisplayBytes("rain"), TimeSpan.FromSeconds(1), scene);
-                await display.RunForAsync(display.GetDisplayBytes(weather.Rain), TimeSpan.FromSeconds(3), scene);
+                await DisplayNumberOrEmpty(display, scene.Value, weather.RainProbability * 100, 'r', TimeSpan.FromSeconds(3));
                 await display.RunForAsync(display.GetDisplayBytes("uind"), TimeSpan.FromSeconds(1), scene);
-                await display.RunForAsync(display.GetDisplayBytes(weather.WindSpeed), TimeSpan.FromSeconds(3), scene);
+                await DisplayNumberOrEmpty(display, scene.Value, weather.WindSpeed, 'u', TimeSpan.FromSeconds(3));
                 await display.RunForAsync(display.GetDisplayBytes(" -- "), TimeSpan.FromSeconds(1), scene);
             }
             catch (Exception ex)
@@ -248,6 +252,18 @@ public class Controller : IDisposable
         finally
         {
             weatherSemaphore.Release();
+        }
+    }
+
+    private static async Task DisplayNumberOrEmpty(DisplayController display, int scene, double? number, char? unitCharacter, TimeSpan duration)
+    {
+        if (number is not null)
+        {
+            await display.RunForAsync(display.GetDisplayBytes(number.Value, unitCharacter), duration, scene);
+        }
+        else
+        {
+            await display.RunForAsync(display.GetDisplayBytes("-   "), duration, scene);
         }
     }
 

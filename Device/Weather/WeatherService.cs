@@ -6,15 +6,20 @@ namespace PiPanel.Device.Weather;
 
 public class WeatherService
 {
-    private readonly Uri ForecastUri = new("https://api.open-meteo.com/v1/forecast");
+    private static readonly Uri CurrentWeatherUri = new("https://api.openweathermap.org/data/2.5/weather");
+
+    private static readonly Uri ForecastUri = new("https://api.openweathermap.org/data/2.5/forecast");
 
     private readonly HttpClient http;
 
     private readonly DeviceProperties deviceProperties;
 
-    public WeatherService(DeviceProperties deviceProperties)
+    private readonly string apiKey;
+
+    public WeatherService(DeviceProperties deviceProperties, string apiKey)
     {
         this.deviceProperties = deviceProperties;
+        this.apiKey = apiKey;
 
         http = new HttpClient();
     }
@@ -26,29 +31,45 @@ public class WeatherService
             return null;
         }
 
-        var uri = BuildForecastUri(deviceProperties.Location);
-        var response = await http.GetFromJsonAsync<WeatherApiResponse>(uri);
+        var currentUri = BuildCurrentWeatherUri(deviceProperties.Location, apiKey);
+        var forecastUri = BuildForecastUri(deviceProperties.Location, apiKey);
 
-        if (response is null)
+        var current = await http.GetFromJsonAsync<WeatherData>(currentUri);
+        var forecast = await http.GetFromJsonAsync<ForecastResponse>(forecastUri);
+
+        return new WeatherInfo
         {
-            Console.Error.WriteLine("Error retrieving weather from {0}", uri);
-
-            return null;
-        }
-
-        return response.Current;
+            Temperature = current?.Main.Temperature,
+            WindSpeed = current?.Wind.Speed,
+            RainProbability = forecast?.List.FirstOrDefault()?.ProbabilityOfPrecipitation,
+        };
     }
 
-    private Uri BuildForecastUri(Location location)
+    private static Uri BuildCurrentWeatherUri(Location location, string apiKey)
+    {
+        var uriBuilder = new UriBuilder(CurrentWeatherUri);
+
+        var queryBuilder = new UriQueryBuilder();
+
+        queryBuilder.Add("lat", location.Latitude.ToString());
+        queryBuilder.Add("lon", location.Longitude.ToString());
+        queryBuilder.Add("units", "metric");
+        queryBuilder.Add("appid", apiKey);
+
+        return queryBuilder.AddToUri(uriBuilder.Uri);
+    }
+
+    private static Uri BuildForecastUri(Location location, string apiKey)
     {
         var uriBuilder = new UriBuilder(ForecastUri);
 
         var queryBuilder = new UriQueryBuilder();
 
-        queryBuilder.Add("latitude", location.Latitude.ToString());
-        queryBuilder.Add("longitude", location.Longitude.ToString());
-        queryBuilder.Add("current", "temperature_2m,rain,windspeed_10m");
-        queryBuilder.Add("timezone", "Europe/London");
+        queryBuilder.Add("lat", location.Latitude.ToString());
+        queryBuilder.Add("lon", location.Longitude.ToString());
+        queryBuilder.Add("units", "metric");
+        queryBuilder.Add("cnt", "1");
+        queryBuilder.Add("appid", apiKey);
 
         return queryBuilder.AddToUri(uriBuilder.Uri);
     }
