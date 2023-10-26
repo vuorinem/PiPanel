@@ -80,6 +80,11 @@ public static class Segments
                 segmentBytes[byteIndex] = GetForCharacter(character);
                 byteIndex++;
             }
+
+            if (byteIndex >= segmentBytes.Length)
+            {
+                break;
+            }
         }
 
         return segmentBytes;
