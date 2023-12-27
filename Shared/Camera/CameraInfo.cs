@@ -13,4 +13,6 @@ public class CameraInfo
     public bool IsFlippedHorizontally { get; set; }
 
     public bool IsFlippedVertically { get; set; }
+
+    public bool IsEnabled { get; set; }
 }

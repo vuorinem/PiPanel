@@ -28,7 +28,7 @@ public class CameraService
 
     private async Task CaptureCameraImagesAsync()
     {
-        foreach (var camera in deviceProperties.Cameras)
+        foreach (var camera in deviceProperties.Cameras.Where(c => c.Value.IsEnabled))
         {
             try
             {

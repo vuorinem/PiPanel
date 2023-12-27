@@ -14,6 +14,8 @@ public static class CameraList
                 ResolutionWidth = 640,
                 ResolutionHeight = 480,
                 IsFlippedVertically = true,
+                IsFlippedHorizontally = true,
+                IsEnabled = true,
             }
         },
         {
@@ -23,6 +25,7 @@ public static class CameraList
                 Source = "/dev/video1",
                 ResolutionWidth = 640,
                 ResolutionHeight = 480,
+                IsEnabled = true,
             }
         },
     };
