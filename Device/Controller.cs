@@ -77,8 +77,16 @@ public class Controller : IDisposable
         var environmentService = new EnvironmentService(deviceClient);
         environmentTimer = new Timer(environmentService.ExecuteAsync, null, TimeSpan.Zero, deviceProperties.EnvironmentInterval);
 
-        servoService = new ServoService(deviceClient);
-        servoService.SetAngle(deviceProperties.Angle);
+        try
+        {
+            servoService = new ServoService(deviceClient);
+            servoService.SetAngle(deviceProperties.Angle);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("Unable to start servo service, servo will not be available: {0}", ex.Message);
+            servoService = null;
+        }
 
         var display = new DisplayController();
         _ = Task.Run(() => RunBackgroundDisplay(display, environmentService));
@@ -143,7 +151,7 @@ public class Controller : IDisposable
 
         await cameraTimer.DisposeAsync();
         await environmentTimer.DisposeAsync();
-        servoService.Dispose();
+        servoService?.Dispose();
 
         Console.WriteLine("Controller stopped");
     }
@@ -429,7 +437,7 @@ public class Controller : IDisposable
                             }
                             else if (deviceProperties.Cameras.ContainsKey(cameraItem.Key))
                             {
-                                Console.WriteLine("Update / Add camera {0}", cameraItem.Key);
+                                Console.WriteLine("Removing camera {0}", cameraItem.Key);
                                 deviceProperties.Cameras.Remove(cameraItem.Key);
                             }
                         }
