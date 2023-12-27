@@ -33,7 +33,16 @@ public class CameraService
             try
             {
                 await CameraCapture.CaptureImageAsync(camera.Value, CameraImageTmpFilePath);
-                await UploadCaptureImage(camera.Key);
+
+                if (File.Exists(CameraImageTmpFilePath))
+                {
+                    await UploadCaptureImage(camera.Key);
+                    File.Delete(CameraImageTmpFilePath);
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Camera imgage not captured for camera '{camera.Value.Label}'");
+                }
             }
             catch (CameraException ex)
             {
